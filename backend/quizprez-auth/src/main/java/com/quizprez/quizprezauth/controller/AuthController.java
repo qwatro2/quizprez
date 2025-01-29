@@ -1,7 +1,9 @@
 package com.quizprez.quizprezauth.controller;
 
 import com.quizprez.quizprezauth.dto.LoginRequest;
+import com.quizprez.quizprezauth.dto.RefreshTokenRequest;
 import com.quizprez.quizprezauth.dto.RegistrationRequest;
+import com.quizprez.quizprezauth.dto.TokenResponse;
 import com.quizprez.quizprezauth.entity.ConfirmationToken;
 import com.quizprez.quizprezauth.entity.User;
 import com.quizprez.quizprezauth.repository.ConfirmationTokenRepository;
@@ -33,14 +35,34 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<User> user = userRepository.findByEmail(request.getEmail());
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
 
-        if (user.isEmpty() || !passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
+        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
             return ResponseEntity.badRequest().body("Неверный email или пароль");
         }
 
-        String token = jwtUtil.generateToken(request.getEmail());
-        return ResponseEntity.ok(token);
+        User user = userOpt.get();
+        String accessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody RefreshTokenRequest request) {
+        Optional<User> userOpt = userRepository.findByRefreshToken(request.getRefreshToken());
+
+        if (userOpt.isEmpty() || !jwtUtil.validateToken(request.getRefreshToken())) {
+            return ResponseEntity.badRequest().body("Невалидный refresh-токен");
+        }
+
+        User user = userOpt.get();
+        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail());
+
+        return ResponseEntity.ok(new TokenResponse(newAccessToken, request.getRefreshToken()));
     }
 
     @PostMapping("/register")
