@@ -37,7 +37,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // Настройте права при необходимости
+        return Collections.emptyList();
     }
 
     @Override

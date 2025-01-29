@@ -8,15 +8,15 @@ import com.quizprez.quizprezauth.entity.ConfirmationToken;
 import com.quizprez.quizprezauth.entity.User;
 import com.quizprez.quizprezauth.repository.ConfirmationTokenRepository;
 import com.quizprez.quizprezauth.repository.UserRepository;
+import com.quizprez.quizprezauth.service.MailSenderService;
 import com.quizprez.quizprezauth.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.MessageFormat;
@@ -29,10 +29,10 @@ import java.util.Optional;
 public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JavaMailSender mailSender;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final Environment environment;
     private final JwtUtil jwtUtil;
+    private final MailSenderService mailSenderService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -73,6 +73,7 @@ public class AuthController {
         return ResponseEntity.ok(new TokenResponse(newAccessToken, request.getRefreshToken()));
     }
 
+    @Transactional
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -95,13 +96,7 @@ public class AuthController {
                 environment.getProperty("BACKEND_PORT"),
                 token.getToken());
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(request.getEmail());
-        message.setSubject("Подтверждение регистрации");
-        message.setText("Для подтверждения перейдите по ссылке: " + confirmationLink);
-        message.setFrom(MessageFormat.format("{0}@yandex.ru", environment.getProperty("MAIL_USERNAME")));
-
-        mailSender.send(message);
+        mailSenderService.sendMail(request.getEmail(), confirmationLink);
 
         return ResponseEntity.ok("Письмо с подтверждением отправлено");
     }

@@ -36,6 +36,6 @@ public class ConfirmationToken {
     public ConfirmationToken(User user) {
         this.user = user;
         this.token = UUID.randomUUID().toString();
-        this.expiresAt = LocalDateTime.now().plusMinutes(15); // Токен действует 15 минут
+        this.expiresAt = LocalDateTime.now().plusMinutes(15);
     }
 }

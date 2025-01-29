@@ -24,7 +24,7 @@ public class User {
     private String password;
     private boolean enabled;
 
-    private String googleId; // Для OAuth2
+    private String googleId;
 
     @Column(length = 512)
     private String refreshToken;

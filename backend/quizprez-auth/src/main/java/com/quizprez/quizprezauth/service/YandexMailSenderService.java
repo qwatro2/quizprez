@@ -26,8 +26,6 @@ public class YandexMailSenderService implements MailSenderService {
         message.setText("Для подтверждения перейдите по ссылке: " + confirmationLink);
         message.setFrom(MessageFormat.format("{0}@yandex.ru", environment.getProperty("MAIL_USERNAME")));
 
-        message.setFrom("aboba@example.com");
-
         try {
             mailSender.send(message);
         } catch (MailException e) {

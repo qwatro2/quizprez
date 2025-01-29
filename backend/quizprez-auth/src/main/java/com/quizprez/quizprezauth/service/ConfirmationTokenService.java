@@ -18,7 +18,7 @@ public class ConfirmationTokenService {
     private final Logger logger = LoggerFactory.getLogger(ConfirmationTokenService.class);
 
     @Async
-    @Scheduled(fixedDelay = 15 * 60 * 1000)  // раз в 15 минут
+    @Scheduled(fixedDelay = 15 * 60 * 1000)
     public void cleanExpiredTokens() {
         logger.info("Start cleaning expired tokens");
         tokenRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
