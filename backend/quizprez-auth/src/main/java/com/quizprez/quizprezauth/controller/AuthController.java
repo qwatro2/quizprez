@@ -43,9 +43,9 @@ public class AuthController {
 
         String confirmationLinkPattern = "{0}://{1}:{2}/api/auth/confirm?token={3}";
         String confirmationLink = MessageFormat.format(confirmationLinkPattern,
-                environment.getProperty("APP_PROTOCOL"),
-                environment.getProperty("APP_HOST"),
-                environment.getProperty("APP_PORT"),
+                environment.getProperty("BACKEND_PROTOCOL"),
+                environment.getProperty("BACKEND_HOST"),
+                environment.getProperty("BACKEND_PORT"),
                 token.getToken());
 
         SimpleMailMessage message = new SimpleMailMessage();
