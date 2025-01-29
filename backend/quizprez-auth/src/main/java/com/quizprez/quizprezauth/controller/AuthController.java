@@ -12,6 +12,7 @@ import com.quizprez.quizprezauth.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -60,6 +61,13 @@ public class AuthController {
         }
 
         User user = userOpt.get();
+
+        if (jwtUtil.isTokenExpired(request.getRefreshToken())) {
+            user.setRefreshToken(null);
+            userRepository.save(user);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh-токен истек, требуется повторный вход");
+        }
+
         String newAccessToken = jwtUtil.generateAccessToken(user.getEmail());
 
         return ResponseEntity.ok(new TokenResponse(newAccessToken, request.getRefreshToken()));
