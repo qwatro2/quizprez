@@ -5,6 +5,7 @@ import com.quizprez.quizprezauth.entity.ConfirmationToken;
 import com.quizprez.quizprezauth.entity.User;
 import com.quizprez.quizprezauth.repository.ConfirmationTokenRepository;
 import com.quizprez.quizprezauth.repository.UserRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class AuthController {
     private final Environment environment;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email уже занят");
         }
