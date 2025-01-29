@@ -19,8 +19,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(request);
 
-        // Обработка данных Google
         String email = oAuth2User.getAttribute("email");
+        if (email == null) {
+            throw new OAuth2AuthenticationException("Не удалось получить email от Google");
+        }
+
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User newUser = new User();
