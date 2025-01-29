@@ -1,10 +1,12 @@
 package com.quizprez.quizprezauth.controller;
 
+import com.quizprez.quizprezauth.dto.LoginRequest;
 import com.quizprez.quizprezauth.dto.RegistrationRequest;
 import com.quizprez.quizprezauth.entity.ConfirmationToken;
 import com.quizprez.quizprezauth.entity.User;
 import com.quizprez.quizprezauth.repository.ConfirmationTokenRepository;
 import com.quizprez.quizprezauth.repository.UserRepository;
+import com.quizprez.quizprezauth.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,6 +29,19 @@ public class AuthController {
     private final JavaMailSender mailSender;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final Environment environment;
+    private final JwtUtil jwtUtil;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        Optional<User> user = userRepository.findByEmail(request.getEmail());
+
+        if (user.isEmpty() || !passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
+            return ResponseEntity.badRequest().body("Неверный email или пароль");
+        }
+
+        String token = jwtUtil.generateToken(request.getEmail());
+        return ResponseEntity.ok(token);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
