@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -31,7 +30,7 @@ public class UserService {
         if (!disabledUsers.isEmpty()) {
             boolean deletedFlag = false;
             for (User user: disabledUsers) {
-                Optional<ConfirmationToken> tokenOpt = tokenRepository.findAllByUser(user);
+                Set<ConfirmationToken> tokenOpt = tokenRepository.findAllByUser(user);
                 if (tokenOpt.isEmpty()) {
                     userRepository.delete(user);
                     deletedFlag = true;

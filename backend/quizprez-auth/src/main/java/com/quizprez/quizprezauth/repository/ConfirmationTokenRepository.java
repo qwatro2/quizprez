@@ -11,5 +11,5 @@ import java.util.Set;
 public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationToken, Long> {
     Optional<ConfirmationToken> findByToken(String token);
     Set<ConfirmationToken> findAllByExpiresAtLessThan(LocalDateTime localDateTime);
-    Optional<ConfirmationToken> findAllByUser(User user);
+    Set<ConfirmationToken> findAllByUser(User user);
 }
