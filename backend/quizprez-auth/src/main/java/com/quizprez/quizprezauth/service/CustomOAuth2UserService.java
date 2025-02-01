@@ -3,6 +3,9 @@ package com.quizprez.quizprezauth.service;
 import com.quizprez.quizprezauth.entity.CustomOAuth2User;
 import com.quizprez.quizprezauth.entity.RefreshToken;
 import com.quizprez.quizprezauth.entity.User;
+import com.quizprez.quizprezauth.exception.OAuth2AuthenticationProcessingException;
+import com.quizprez.quizprezauth.oauth2.OAuth2UserInfo;
+import com.quizprez.quizprezauth.oauth2.OAuth2UserInfoFactory;
 import com.quizprez.quizprezauth.repository.UserRepository;
 import com.quizprez.quizprezauth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +29,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(request);
 
-        String email = oAuth2User.getAttribute("email");
+        String registrationId = request.getClientRegistration().getRegistrationId();
+        OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, oAuth2User.getAttributes());
+
+        String email = oAuth2UserInfo.getEmail();
         if (email == null) {
-            throw new OAuth2AuthenticationException("Не удалось получить email от Google");
+            throw new OAuth2AuthenticationProcessingException("Не удалось получить email пользователя");
         }
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setEmail(email);
-                    newUser.setGoogleId(oAuth2User.getAttribute("sub"));
+                    newUser.setGoogleId(oAuth2UserInfo.getId());
                     newUser.setEnabled(true);
                     return userRepository.save(newUser);
                 });
@@ -45,7 +51,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
         String refreshToken = refreshTokenEntity.getToken();
 
-        CustomOAuth2User customUser = new CustomOAuth2User(user, accessToken, refreshToken, oAuth2User.getAttributes());
+        CustomOAuth2User customUser = new CustomOAuth2User(user, accessToken, refreshToken, oAuth2UserInfo.getAttributes());
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(customUser, null, customUser.getAuthorities());
