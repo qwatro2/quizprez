@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -30,7 +29,7 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final Environment environment;
+    private final FrontendProperties frontendProperties;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
 
@@ -87,8 +86,8 @@ public class SecurityConfig {
 
     private String constructFrontendLink() {
         return MessageFormat.format("{0}://{1}:{2}",
-                environment.getProperty("FRONTEND_PROTOCOL"),
-                environment.getProperty("FRONTEND_HOST"),
-                environment.getProperty("FRONTEND_PORT"));
+                frontendProperties.getProtocol(),
+                frontendProperties.getHost(),
+                frontendProperties.getPort());
     }
 }
