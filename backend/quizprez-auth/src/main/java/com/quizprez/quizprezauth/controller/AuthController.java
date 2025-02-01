@@ -1,5 +1,6 @@
 package com.quizprez.quizprezauth.controller;
 
+import com.quizprez.quizprezauth.config.BackendProperties;
 import com.quizprez.quizprezauth.dto.LoginRequest;
 import com.quizprez.quizprezauth.dto.RefreshTokenRequest;
 import com.quizprez.quizprezauth.dto.RegistrationRequest;
@@ -12,7 +13,6 @@ import com.quizprez.quizprezauth.service.MailSenderService;
 import com.quizprez.quizprezauth.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,9 +30,9 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ConfirmationTokenRepository confirmationTokenRepository;
-    private final Environment environment;
     private final JwtUtil jwtUtil;
     private final MailSenderService mailSenderService;
+    private final BackendProperties backendProperties;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -89,11 +89,9 @@ public class AuthController {
         ConfirmationToken token = new ConfirmationToken(user);
         confirmationTokenRepository.save(token);
 
-        String confirmationLinkPattern = "{0}://{1}:{2}/api/auth/confirm?token={3}";
+        String confirmationLinkPattern = "{0}/api/auth/confirm?token={1}";
         String confirmationLink = MessageFormat.format(confirmationLinkPattern,
-                environment.getProperty("BACKEND_PROTOCOL"),
-                environment.getProperty("BACKEND_HOST"),
-                environment.getProperty("BACKEND_PORT"),
+                constructBackendLink(),
                 token.getToken());
 
         mailSenderService.sendMail(request.getEmail(), confirmationLink);
@@ -122,5 +120,13 @@ public class AuthController {
         confirmationTokenRepository.save(confirmationToken);
 
         return ResponseEntity.ok("Email подтвержден!");
+    }
+
+
+    private String constructBackendLink() {
+        return MessageFormat.format("{0}://{1}:{2}",
+                backendProperties.getProtocol(),
+                backendProperties.getHost(),
+                backendProperties.getPort());
     }
 }
