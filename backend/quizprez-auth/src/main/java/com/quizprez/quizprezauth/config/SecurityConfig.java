@@ -3,16 +3,14 @@ package com.quizprez.quizprezauth.config;
 import com.quizprez.quizprezauth.entity.CustomOAuth2User;
 import com.quizprez.quizprezauth.filter.JwtAuthenticationFilter;
 import com.quizprez.quizprezauth.service.CustomOAuth2UserService;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -73,14 +71,15 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
             if (authentication.getPrincipal() instanceof CustomOAuth2User customUser) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(customUser, null, customUser.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                HttpSession session = request.getSession(true);
-                session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+                response.setContentType("application/json");
+                String jsonResponse = "{\"email\": \"" + customUser.user().getEmail() + "\", " +
+                        "\"accessToken\": \"" + customUser.accessToken() + "\", " +
+                        "\"refreshToken\": \"" + customUser.refreshToken() + "\"}";
+                response.getWriter().write(jsonResponse);
+                response.setStatus(HttpServletResponse.SC_OK);
+            } else {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Ошибка аутентификации: пользователь не найден");
             }
-            response.sendRedirect("/api/auth/success");
         };
     }
 
