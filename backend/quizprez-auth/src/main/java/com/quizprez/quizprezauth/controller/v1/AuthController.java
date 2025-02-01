@@ -1,4 +1,4 @@
-package com.quizprez.quizprezauth.controller;
+package com.quizprez.quizprezauth.controller.v1;
 
 import com.quizprez.quizprezauth.config.BackendProperties;
 import com.quizprez.quizprezauth.dto.LoginRequest;
@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final UserRepository userRepository;
