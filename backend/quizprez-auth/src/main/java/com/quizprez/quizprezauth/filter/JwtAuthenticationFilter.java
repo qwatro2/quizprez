@@ -1,6 +1,7 @@
 package com.quizprez.quizprezauth.filter;
 
 import com.quizprez.quizprezauth.entity.User;
+import com.quizprez.quizprezauth.exception.TokenExpiredException;
 import com.quizprez.quizprezauth.repository.UserRepository;
 import com.quizprez.quizprezauth.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -30,9 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             if (jwtUtil.isTokenExpired(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Access Token истек, используйте refresh-токен");
-                return;
+                throw new TokenExpiredException("Access Token истек, используйте refresh-токен");
             }
 
             if (jwtUtil.validateToken(token)) {
