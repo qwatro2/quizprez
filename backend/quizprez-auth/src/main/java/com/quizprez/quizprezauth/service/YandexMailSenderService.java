@@ -1,8 +1,7 @@
 package com.quizprez.quizprezauth.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -11,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class YandexMailSenderService implements MailSenderService {
     private final JavaMailSender mailSender;
     private final Environment environment;
-    private final Logger logger = LoggerFactory.getLogger(YandexMailSenderService.class);
 
     @Override
     public void sendMail(String email, String confirmationLink) {
@@ -29,7 +28,7 @@ public class YandexMailSenderService implements MailSenderService {
         try {
             mailSender.send(message);
         } catch (MailException e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
             throw e;
         }
     }
