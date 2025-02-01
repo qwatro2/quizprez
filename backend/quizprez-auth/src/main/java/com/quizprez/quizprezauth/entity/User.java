@@ -26,9 +26,6 @@ public class User {
 
     private String googleId;
 
-    @Column(length = 512)
-    private String refreshToken;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

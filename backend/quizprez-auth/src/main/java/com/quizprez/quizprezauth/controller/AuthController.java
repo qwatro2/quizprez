@@ -6,10 +6,13 @@ import com.quizprez.quizprezauth.dto.RefreshTokenRequest;
 import com.quizprez.quizprezauth.dto.RegistrationRequest;
 import com.quizprez.quizprezauth.dto.TokenResponse;
 import com.quizprez.quizprezauth.entity.ConfirmationToken;
+import com.quizprez.quizprezauth.entity.RefreshToken;
 import com.quizprez.quizprezauth.entity.User;
+import com.quizprez.quizprezauth.exception.TokenExpiredException;
 import com.quizprez.quizprezauth.repository.ConfirmationTokenRepository;
 import com.quizprez.quizprezauth.repository.UserRepository;
 import com.quizprez.quizprezauth.service.MailSenderService;
+import com.quizprez.quizprezauth.service.RefreshTokenService;
 import com.quizprez.quizprezauth.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final MailSenderService mailSenderService;
     private final BackendProperties backendProperties;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -44,33 +48,29 @@ public class AuthController {
 
         User user = userOpt.get();
         String accessToken = jwtUtil.generateAccessToken(user.getEmail());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-        user.setRefreshToken(refreshToken);
-        userRepository.save(user);
+        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
+        String refreshToken = refreshTokenEntity.getToken();
 
         return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestBody RefreshTokenRequest request) {
-        Optional<User> userOpt = userRepository.findByRefreshToken(request.getRefreshToken());
-
-        if (userOpt.isEmpty() || !jwtUtil.validateToken(request.getRefreshToken())) {
+        Optional<RefreshToken> tokenOpt = refreshTokenService.findByToken(request.getRefreshToken());
+        if (tokenOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Невалидный refresh-токен");
         }
 
-        User user = userOpt.get();
-
-        if (jwtUtil.isTokenExpired(request.getRefreshToken())) {
-            user.setRefreshToken(null);
-            userRepository.save(user);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh-токен истек, требуется повторный вход");
+        try {
+            RefreshToken validRefreshToken = refreshTokenService.verifyRefreshToken(request.getRefreshToken());
+            User user = validRefreshToken.getUser();
+            String newAccessToken = jwtUtil.generateAccessToken(user.getEmail());
+            return ResponseEntity.ok(new TokenResponse(newAccessToken, request.getRefreshToken()));
+        } catch (TokenExpiredException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Refresh-токен истек, требуется повторный вход");
         }
-
-        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail());
-
-        return ResponseEntity.ok(new TokenResponse(newAccessToken, request.getRefreshToken()));
     }
 
     @Transactional

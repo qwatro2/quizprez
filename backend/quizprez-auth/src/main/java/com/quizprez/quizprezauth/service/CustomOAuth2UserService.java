@@ -1,6 +1,7 @@
 package com.quizprez.quizprezauth.service;
 
 import com.quizprez.quizprezauth.entity.CustomOAuth2User;
+import com.quizprez.quizprezauth.entity.RefreshToken;
 import com.quizprez.quizprezauth.entity.User;
 import com.quizprez.quizprezauth.repository.UserRepository;
 import com.quizprez.quizprezauth.util.JwtUtil;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
@@ -39,10 +41,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 });
 
         String accessToken = jwtUtil.generateAccessToken(email);
-        String refreshToken = jwtUtil.generateRefreshToken(email);
 
-        user.setRefreshToken(refreshToken);
-        userRepository.save(user);
+        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user);
+        String refreshToken = refreshTokenEntity.getToken();
 
         CustomOAuth2User customUser = new CustomOAuth2User(user, accessToken, refreshToken, oAuth2User.getAttributes());
 
