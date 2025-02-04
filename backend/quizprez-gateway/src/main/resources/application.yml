@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: quizprez-gateway
+  config:
+    import: optional:file:../.env[.properties]
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_BACKEND_PROTOCOL}://${AUTH_BACKEND_HOST}:${AUTH_BACKEND_PORT}
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: presentation-service
+          uri: ${PRESENTATION_BACKEND_PROTOCOL}://${PRESENTATION_BACKEND_HOST}:${PRESENTATION_BACKEND_PORT}
+          predicates:
+            - Path=/api/v1/presentations/**
+        - id: quiz-service
+          uri: ${QUIZ_BACKEND_PROTOCOL}://${QUIZ_BACKEND_HOST}:${QUIZ_BACKEND_PORT}
+          predicates:
+            - Path=/api/v1/quiz/**
+        - id: pptx-parsing-service
+          uri: ${PPTX_BACKEND_PROTOCOL}://${PPTX_BACKEND_HOST}:${PPTX_BACKEND_PORT}
+          predicates:
+            - Path=/api/v1/parse/**
+server:
+  port: ${GATEWAY_BACKEND_PORT}
