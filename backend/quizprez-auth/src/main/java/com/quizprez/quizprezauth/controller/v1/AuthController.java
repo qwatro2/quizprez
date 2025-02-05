@@ -89,7 +89,7 @@ public class AuthController {
         ConfirmationToken token = new ConfirmationToken(user);
         confirmationTokenRepository.save(token);
 
-        String confirmationLinkPattern = "{0}/api/auth/confirm?token={1}";
+        String confirmationLinkPattern = "{0}/api/v1/auth/confirm?token={1}";
         String confirmationLink = MessageFormat.format(confirmationLinkPattern,
                 constructBackendLink(),
                 token.getToken());
