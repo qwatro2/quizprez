@@ -1,11 +1,64 @@
 version: '3.8'
 
 services:
-  db:
+  postgres:
     image: postgres:alpine
+    container_name: quizprez-postgres
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  quizprez-auth:
+    build:
+      context: ./quizprez-auth
+      dockerfile: Dockerfile
+    container_name: quizprez-auth
+    ports:
+      - "${AUTH_BACKEND_PORT}:${AUTH_BACKEND_PORT}"
+    depends_on:
+      - postgres
+
+  quizprez-gateway:
+    build:
+      context: ./quizprez-gateway
+      dockerfile: Dockerfile
+    container_name: quizprez-gateway
+    ports:
+      - "${GATEWAY_BACKEND_PORT}:${GATEWAY_BACKEND_PORT}"
+    depends_on:
+      - quizprez-auth
+      - quizprez-pptx-parsing
+      - quizprez-presentation
+      - quizprez-quiz
+
+  quizprez-pptx-parsing:
+    build:
+      context: ./quizprez-pptx-parsing
+      dockerfile: Dockerfile
+    container_name: quizprez-pptx-parsing
+    ports:
+      - "${PPTX_BACKEND_PORT}:${PPTX_BACKEND_PORT}"
+
+  quizprez-presentation:
+    build:
+      context: ./quizprez-presentation
+      dockerfile: Dockerfile
+    container_name: quizprez-presentation
+    ports:
+      - "${PRESENTATION_BACKEND_PORT}:${PRESENTATION_BACKEND_PORT}"
+
+  quizprez-quiz:
+    build:
+      context: ./quizprez-quiz
+      dockerfile: Dockerfile
+    container_name: quizprez-quiz
+    ports:
+      - "${QUIZ_BACKEND_PORT}:${QUIZ_BACKEND_PORT}"
+
+volumes:
+  postgres_data:
