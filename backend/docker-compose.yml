@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:alpine
     container_name: quizprez-postgres
+    env_file:
+      - .env
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USERNAME}
@@ -18,6 +20,8 @@ services:
       context: ./quizprez-auth
       dockerfile: Dockerfile
     container_name: quizprez-auth
+    env_file:
+      - .env
     ports:
       - "${AUTH_BACKEND_PORT}:${AUTH_BACKEND_PORT}"
     depends_on:
@@ -28,6 +32,8 @@ services:
       context: ./quizprez-gateway
       dockerfile: Dockerfile
     container_name: quizprez-gateway
+    env_file:
+      - .env
     ports:
       - "${GATEWAY_BACKEND_PORT}:${GATEWAY_BACKEND_PORT}"
     depends_on:
@@ -41,6 +47,8 @@ services:
       context: ./quizprez-pptx-parsing
       dockerfile: Dockerfile
     container_name: quizprez-pptx-parsing
+    env_file:
+      - .env
     ports:
       - "${PPTX_BACKEND_PORT}:${PPTX_BACKEND_PORT}"
 
@@ -49,6 +57,8 @@ services:
       context: ./quizprez-presentation
       dockerfile: Dockerfile
     container_name: quizprez-presentation
+    env_file:
+      - .env
     ports:
       - "${PRESENTATION_BACKEND_PORT}:${PRESENTATION_BACKEND_PORT}"
 
@@ -57,6 +67,8 @@ services:
       context: ./quizprez-quiz
       dockerfile: Dockerfile
     container_name: quizprez-quiz
+    env_file:
+      - .env
     ports:
       - "${QUIZ_BACKEND_PORT}:${QUIZ_BACKEND_PORT}"
 
