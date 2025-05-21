@@ -1,6 +1,5 @@
 package com.quizprez.quizprezpptxparsing.services;
 
-import com.quizprez.quizprezpptxparsing.tmp.DirectoryTree;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.jodconverter.core.document.DefaultDocumentFormatRegistry;
@@ -9,7 +8,7 @@ import org.jodconverter.core.office.OfficeException;
 import org.jodconverter.core.util.FileUtils;
 import org.jodconverter.local.LocalConverter;
 import org.jodconverter.local.office.LocalOfficeManager;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@Primary
+@ConditionalOnProperty(name = "conversation-method", havingValue = "jod")
 public class JodPresentationConverterService implements PresentationConverterService {
     private final LocalOfficeManager officeManager;
     private final DocumentFormat htmlFormat;
@@ -78,7 +77,7 @@ public class JodPresentationConverterService implements PresentationConverterSer
 
     private String processHtmlContent(Path htmlFile, Path resourceDir) throws IOException {
         String htmlContent = Files.readString(htmlFile, StandardCharsets.UTF_8);
-        
+
         htmlContent = inlineCss(htmlContent, resourceDir);
 
         htmlContent = htmlContent

@@ -2,6 +2,7 @@ package com.quizprez.quizprezpptxparsing.services;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,7 @@ import java.util.regex.Pattern;
 
 @Service
 @Slf4j
+@ConditionalOnProperty(name = "conversation-method", havingValue = "libre-office")
 public class LibreOfficePresentationConverterService implements PresentationConverterService {
     @PostConstruct
     private void checkLibreOfficeInstalled() {
