@@ -11,9 +11,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -68,11 +71,54 @@ public class LibreOfficePresentationConverterService implements PresentationConv
                 throw new RuntimeException("Conversion failed with exit code: " + exitCode);
             }
 
-            return findAndReadHtmlFile(outputDir);
+            Path htmlFile = findHtmlFile(outputDir)
+                    .orElseThrow(() -> new IOException("No HTML file generated"));
+            return processHtmlContent(htmlFile);
         } finally {
             cleanup(tempDir);
             cleanup(outputDir);
         }
+    }
+
+    private String processHtmlContent(Path htmlFile) throws IOException {
+        String content = Files.readString(htmlFile);
+        content = inlineCssStyles(content, htmlFile.getParent());
+        content = embedImages(content, htmlFile.getParent());
+        content = cleanHtml(content);
+        return content;
+    }
+
+    private String inlineCssStyles(String html, Path dir) throws IOException {
+        Pattern pattern = Pattern.compile("<link.*?href=\"(.*?.css)\".*?>");
+        Matcher matcher = pattern.matcher(html);
+
+        while (matcher.find()) {
+            String cssPath = matcher.group(1);
+            Path cssFile = dir.resolve(cssPath);
+            if (Files.exists(cssFile)) {
+                String cssContent = Files.readString(cssFile);
+                html = html.replace(matcher.group(0), "<style>" + cssContent + "</style>");
+            }
+        }
+        return html;
+    }
+
+    private String embedImages(String html, Path dir) throws IOException {
+        Pattern pattern = Pattern.compile("<img.*?src=\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(html);
+
+        while (matcher.find()) {
+            String imgPath = matcher.group(1);
+            Path imgFile = dir.resolve(imgPath);
+            if (Files.exists(imgFile)) {
+                String mimeType = Files.probeContentType(imgFile);
+                byte[] data = Files.readAllBytes(imgFile);
+                String base64 = Base64.getEncoder().encodeToString(data);
+                String replacement = "data:" + mimeType + ";base64," + base64 + "\"";
+                html = html.replace(imgPath + "\"", replacement);
+            }
+        }
+        return html;
     }
 
     private void readProcessOutput(Process process) throws IOException {
@@ -84,15 +130,17 @@ public class LibreOfficePresentationConverterService implements PresentationConv
         }
     }
 
-    private String findAndReadHtmlFile(Path outputDir) throws IOException {
-        Optional<Path> htmlFile = Files.walk(outputDir)
+    private Optional<Path> findHtmlFile(Path outputDir) throws IOException {
+        return Files.walk(outputDir)
                 .filter(path -> path.toString().endsWith(".html"))
                 .findFirst();
+    }
 
-        if (htmlFile.isEmpty()) {
-            throw new IOException("No HTML file generated");
-        }
-        return Files.readString(htmlFile.get());
+    private String cleanHtml(String html) {
+        return html
+                .replaceAll("<meta.*?>", "")
+                .replaceAll("<script.*?</script>", "")
+                .replaceAll("<!--.*?-->", "");
     }
 
     private void cleanup(Path path) {
