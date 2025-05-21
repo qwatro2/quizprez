@@ -18,8 +18,8 @@ import java.util.stream.Stream;
 
 @Service
 @Slf4j
-@ConditionalOnProperty(name = "conversation-method", havingValue = "two-steps")
-public class TwoStepsPresentationConverterService implements PresentationConverterService {
+@ConditionalOnProperty(name = "conversation-method", havingValue = "pdftohtml")
+public class PdftohtmlPresentationConverterService implements PresentationConverterService {
     @Override
     public String convert(MultipartFile file) throws IOException {
         try {
