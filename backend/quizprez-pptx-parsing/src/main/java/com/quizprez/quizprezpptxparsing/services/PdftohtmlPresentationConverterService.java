@@ -59,9 +59,11 @@ public class PdftohtmlPresentationConverterService implements PresentationConver
             return tempDir.resolve(inputFile.getFileName().toString().replaceAll("\\..+$", ".pdf"));
 
         } finally {
-            Files.walk(tempDir)
-                    .filter(path -> !path.toString().endsWith(".pdf"))
-                    .forEach(this::deleteSilently);
+            try (Stream<Path> stream = Files.walk(tempDir)) {
+                stream
+                        .filter(path -> !path.toString().endsWith(".pdf"))
+                        .forEach(this::deleteSilently);
+            }
         }
     }
 
@@ -71,7 +73,6 @@ public class PdftohtmlPresentationConverterService implements PresentationConver
             Process process = new ProcessBuilder(
                     "pdftohtml",
                     "-c",
-                    "-s",
                     "-noframes",
                     "-q",
                     "-enc", "UTF-8",
