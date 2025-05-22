@@ -1,6 +1,7 @@
 package com.quizprez.quizprezpptxparsing.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.jodconverter.core.util.FileUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -68,15 +72,16 @@ public class PdftohtmlPresentationConverterService implements PresentationConver
                     "pdftohtml",
                     "-c",
                     "-s",
-                    "-i",
                     "-noframes",
                     "-q",
+                    "-enc", "UTF-8",
+                    "-nodrm",
                     pdfFile.toString(),
                     outputDir.resolve("output").toString()
             ).redirectErrorStream(true).start();
 
             String processOutput = readProcessOutput(process);
-            log.atInfo().log("pdftohtml output:\n{}", processOutput);
+            log.info("pdftohtml output:\n{}", processOutput);
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
@@ -84,7 +89,11 @@ public class PdftohtmlPresentationConverterService implements PresentationConver
             }
 
             Path outputHtml = findOutputFile(outputDir);
-            return Files.readString(outputHtml, StandardCharsets.UTF_8);
+            String htmlContent = Files.readString(outputHtml, StandardCharsets.UTF_8);
+
+            htmlContent = embedImagesAsBase64(htmlContent, outputDir);
+
+            return htmlContent;
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -92,6 +101,46 @@ public class PdftohtmlPresentationConverterService implements PresentationConver
         } finally {
             FileUtils.deleteQuietly(outputDir.toFile());
         }
+    }
+
+    private String embedImagesAsBase64(String html, Path resourceDir) {
+        Pattern pattern = Pattern.compile("<img[^>]+src=\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(html);
+        StringBuilder result = new StringBuilder();
+
+        while (matcher.find()) {
+            String imgPath = matcher.group(1);
+            Path imgFile = resourceDir.resolve(imgPath);
+
+            if (Files.exists(imgFile)) {
+                try {
+                    String mimeType = determineMimeType(imgFile);
+                    byte[] imageData = Files.readAllBytes(imgFile);
+                    String base64 = Base64.getEncoder().encodeToString(imageData);
+                    String replacement = "<img src=\"data:" + mimeType + ";base64," + base64 + "\"";
+                    matcher.appendReplacement(result, replacement);
+                } catch (IOException e) {
+                    log.error("Error processing image {}: {}", imgFile, e.getMessage());
+                    matcher.appendReplacement(result, matcher.group(0));
+                }
+            } else {
+                log.warn("Image file not found: {}", imgFile);
+                matcher.appendReplacement(result, matcher.group(0));
+            }
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+
+    private String determineMimeType(Path imgFile) {
+        String extension = FilenameUtils.getExtension(imgFile.toString()).toLowerCase();
+        return switch (extension) {
+            case "png" -> "image/png";
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "gif" -> "image/gif";
+            default -> "application/octet-stream";
+        };
     }
 
     private String readProcessOutput(Process process) throws IOException {
@@ -118,7 +167,11 @@ public class PdftohtmlPresentationConverterService implements PresentationConver
                 .replaceAll("<h1>Document Outline</h1>", "")
                 .replaceAll("<ul>[\\s\\S]*?</ul>", "");
 
-        html = "<!DOCTYPE html><html><body>" + html + "</body></html>";
+        html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head><body>"
+                + html.replaceAll("<head>", "<head><meta charset=\"UTF-8\">")
+                + "</body></html>";
+
+        html = html.replace("\uFEFF", "");
 
         return html;
     }
