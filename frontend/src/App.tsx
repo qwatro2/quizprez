@@ -1,6 +1,6 @@
 import {LoginPage} from "./pages/auth/login.tsx";
 import {Route, Routes} from "react-router-dom";
-import EditorPage from "./pages/EditorPage.tsx";
+import EditorPage from "./pages/editor/editor.tsx";
 
 function App() {
     return (

@@ -6,6 +6,8 @@
     align-items: center !important;
     justify-content: space-between !important;
     z-index: 2 !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .navbar-list {
