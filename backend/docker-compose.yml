@@ -49,6 +49,9 @@ services:
       - .env
     ports:
       - "${PPTX_BACKEND_PORT}:${PPTX_BACKEND_PORT}"
+    volumes:
+      - pptx_images:/app/images
+
 
   quizprez-presentation:
     build:
@@ -72,3 +75,4 @@ services:
 
 volumes:
   postgres_data:
+  pptx_images:
