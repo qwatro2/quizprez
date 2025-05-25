@@ -10,6 +10,16 @@ export const EditorPage: React.FC = () => {
     const [htmlCode, setHtmlCode] = useState<string>("<!DOCTYPE html>\n<html>\n<head>\n  <title>Пример</title>\n</head>\n<body>\n  <h1>Привет, мир!</h1>\n</body>\n</html>");
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
+    const handleDownload = () => {
+        const blob = new Blob([htmlCode], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'index.html';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <BackgroundBox>
             <NavBar needSearchLine={false} needButtonToSlides={true} slidesTitle={"БЧХ-коды"} />
@@ -39,12 +49,13 @@ export const EditorPage: React.FC = () => {
                         <Box
                             component="img"
                             src={uploadUrl}
-                            sx={{width: 25, height: 25}}
+                            sx={{width: 25, height: 25, cursor: "pointer"}}
                         />
                         <Box
                             component="img"
                             src={downloadUrl}
-                            sx={{width: 25, height: 25}}
+                            sx={{width: 25, height: 25, cursor: "pointer"}}
+                            onClick={handleDownload}
                         />
                     </Box>
 
@@ -95,7 +106,11 @@ export const EditorPage: React.FC = () => {
                         />
                     </Box>
 
-                    <Divider></Divider>
+                    <Divider orientation="vertical" sx={{
+                        width: "6px",
+                        backgroundColor: "#2F3A4C",
+                        border: "none"
+                    }} />
 
                     {/* Предпросмотр */}
                     <Box sx={{
