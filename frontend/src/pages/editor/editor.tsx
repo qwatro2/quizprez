@@ -1,14 +1,19 @@
 import NavBar from "../../components/navbar/navbar.tsx";
-import {Box, Button, Divider, Typography} from "@mui/material";
+import {Box, Button, Divider, Typography, Snackbar, Alert, CircularProgress} from "@mui/material";
 import uploadUrl from "../../assets/UploadIcon.svg";
 import downloadUrl from "../../assets/DownloadIcon.svg";
 import BackgroundBox from "../../components/backgroundbox/backgroundbox.tsx";
 import React, {useRef, useState} from "react";
 import {Editor} from "@monaco-editor/react";
+import axios from 'axios';
 
 export const EditorPage: React.FC = () => {
     const [htmlCode, setHtmlCode] = useState<string>("<!DOCTYPE html>\n<html>\n<head>\n  <title>Пример</title>\n</head>\n<body>\n  <h1>Привет, мир!</h1>\n</body>\n</html>");
+    const [error, setError] = useState<string | null>(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleDownload = () => {
         const blob = new Blob([htmlCode], { type: 'text/html' });
@@ -18,6 +23,72 @@ export const EditorPage: React.FC = () => {
         a.download = 'index.html';
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const api = axios.create({
+                baseURL: 'http://localhost:8088/api/v1',
+                timeout: 300000,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'accept' : '*/*'
+                },
+            });
+
+            const response = await api.post('/parse/pptx', formData, {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round(
+                        (progressEvent.loaded * 100) / (progressEvent.total || 1)
+                    );
+                    console.log(`Upload progress: ${percentCompleted}%`);
+                },
+            });
+
+            if (response.data) {
+                setHtmlCode(response.data);
+            }
+        } catch (error) {
+            let errorMessage = 'Произошла ошибка при загрузке файла';
+
+            if (axios.isAxiosError(error)) {
+                if (error.code === 'ECONNABORTED') {
+                    errorMessage = 'Превышено время ожидания ответа от сервера. Попробуйте уменьшить размер файла или повторить попытку позже.';
+                } else if (error.code === 'ERR_NETWORK') {
+                    errorMessage = 'Не удалось подключиться к серверу. Проверьте, запущен ли бекенд и доступен ли по указанному адресу.';
+                } else if (error.response) {
+                    errorMessage = `Ошибка сервера: ${error.response.status} - ${error.response.data?.message || 'Неизвестная ошибка'}`;
+                }
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            console.error('Error uploading file:', error);
+            setError(errorMessage);
+            setOpenSnackbar(true);
+        } finally {
+            setIsLoading(false);
+            if (e.target) {
+                e.target.value = '';
+            }
+        }
+    };
+
+    const handleCloseSnackbar = () => {
+        setOpenSnackbar(false);
     };
 
     return (
@@ -46,10 +117,18 @@ export const EditorPage: React.FC = () => {
                         alignItems: "center",
                         gap: "20px"
                     }}>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept=".pptx"
+                            style={{ display: 'none' }}
+                        />
                         <Box
                             component="img"
                             src={uploadUrl}
                             sx={{width: 25, height: 25, cursor: "pointer"}}
+                            onClick={handleUploadClick}
                         />
                         <Box
                             component="img"
@@ -57,6 +136,7 @@ export const EditorPage: React.FC = () => {
                             sx={{width: 25, height: 25, cursor: "pointer"}}
                             onClick={handleDownload}
                         />
+                        {isLoading && <CircularProgress size={24} color="inherit" />}
                     </Box>
 
                     <Box sx={{
@@ -132,6 +212,18 @@ export const EditorPage: React.FC = () => {
                     </Box>
                 </Box>
             </Box>
+
+            {/* Снэкбар для отображения ошибок */}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+                    {error}
+                </Alert>
+            </Snackbar>
         </BackgroundBox>
     );
 };
