@@ -37,6 +37,12 @@ public class ParserController {
         }
     }
 
+    // TODO: remove
+    @RequestMapping(method = RequestMethod.OPTIONS, value = "/pptx")
+    public ResponseEntity<?> dummyOptions() {
+        return ResponseEntity.ok().build();
+    }
+
     private boolean isSupportedFormat(String filename) {
         if (filename == null) {
             return false;
