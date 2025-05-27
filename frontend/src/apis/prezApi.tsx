@@ -24,7 +24,7 @@ export const uploadPrez = async (
     title: string,
     html: string
 ) => {
-    const response = await axios.post(`${API_BASE_URL}/presentations`, {
+    const response = await axios.post(`${API_BASE_URL}/presentations?buttonMode=DEMO`, {
         ownerId: 0,
         title: title,
         html: html
@@ -39,7 +39,7 @@ export const updatePrez = async (
     title: string,
     html: string
 ) => {
-    const response = await axios.put(`${API_BASE_URL}/presentations/${id}`, {
+    const response = await axios.put(`${API_BASE_URL}/presentations/${id}?buttonMode=DEMO`, {
         ownerId: ownerId,
         title: title,
         html: html
