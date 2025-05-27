@@ -14,8 +14,6 @@ public class PresentationRequest {
 
     private String title;
 
-    private String customHtml;
-
-    private String convertedHtml;
+    private String html;
 }
 
