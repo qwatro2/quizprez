@@ -83,7 +83,7 @@ public class ButtonCustomHtmlConverterImpl implements CustomHtmlConverter {
                 "    .then(function(data) {\n" +
                 "      var params = new URLSearchParams();\n" +
                 "      params.append('code', data.code);\n" +
-                "      params.append('base64', data.base64);\n" +
+                "      params.append('base64', data.qrCodeBase64);\n" +
                 "      var url = '" + frontendConfig.baseUrl() + "/quiz/creds?' + params.toString();\n" +
                 "      if (window.top.top !== window.self) {\n" +
                 "        window.top.location.href = url;\n" +
