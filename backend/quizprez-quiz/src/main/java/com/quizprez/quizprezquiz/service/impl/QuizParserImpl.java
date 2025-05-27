@@ -45,17 +45,24 @@ public class QuizParserImpl implements QuizParser {
         if (quizEl == null) {
             throw new IllegalArgumentException("No <quiz> element found in HTML");
         }
+        QuizEntity quizEntity = new QuizEntity();
 
-        Map<String, String> quizStyles = stylesConverter.expand(quizEl.attr("style"));
-        QuizEntity quizEntity = new QuizEntity().setStyles(quizStyles);
+        if (quizEl.hasAttr("style")) {
+            Map<String, String> quizStyles = stylesConverter.expand(quizEl.attr("style"));
+            quizEntity.setStyles(quizStyles);
+        }
 
         Elements questionEls = quizEl.select("question");
         for (Element qEl : questionEls) {
             String time = qEl.hasAttr("time") ? qEl.attr("time") : null;
-            Map<String, String> qStyles = stylesConverter.expand(qEl.attr("style"));
             Element textEl = qEl.selectFirst("text");
             String questionText = textEl != null ? textEl.text() : "";
-            QuestionEntity questionEntity = new QuestionEntity(questionText, time).setStyles(qStyles);
+            QuestionEntity questionEntity = new QuestionEntity(questionText, time);
+
+            if (qEl.hasAttr("style")) {
+                Map<String, String> qStyles = stylesConverter.expand(qEl.attr("style"));
+                questionEntity.setStyles(qStyles);
+            }
 
             Elements optionEls = qEl.select("option");
             for (Element oEl : optionEls) {
@@ -63,8 +70,13 @@ public class QuizParserImpl implements QuizParser {
                 Boolean isCorrect = oEl.hasAttr("correct")
                         ? Boolean.parseBoolean(oEl.attr("correct"))
                         : Boolean.FALSE;
-                Map<String, String> oStyles = stylesConverter.expand(oEl.attr("style"));
-                OptionEntity optionEntity = new OptionEntity(optText, isCorrect).setStyles(oStyles);
+                OptionEntity optionEntity = new OptionEntity(optText, isCorrect);
+
+                if (oEl.hasAttr("style")) {
+                    Map<String, String> oStyles = stylesConverter.expand(oEl.attr("style"));
+                    optionEntity.setStyles(oStyles);
+                }
+
                 questionEntity.addOption(optionEntity);
             }
 

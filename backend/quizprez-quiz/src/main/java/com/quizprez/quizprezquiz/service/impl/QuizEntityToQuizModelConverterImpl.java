@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class QuizEntityToQuizModelConverterImpl implements QuizEntityToQuizModel
         for (QuestionEntity questionEntity : quizEntity.getQuestionEntities()) {
             QuestionModel questionModel = QuestionModel.builder()
                     .text(questionEntity.getText())
-                    .timeSeconds(Duration.parse(questionEntity.getTime()).toSeconds())
+                    .timeSeconds(nonNullDurationInSeconds(questionEntity.getTime()))
                     .styles(stylesConverter.collapse(questionEntity.getStyles()))
                     .quizModel(quizModel)
                     .build();
@@ -52,5 +53,16 @@ public class QuizEntityToQuizModelConverterImpl implements QuizEntityToQuizModel
 
         quizModel.setQuestionModels(questionModels);
         return quizModel;
+    }
+
+    private Long nonNullDurationInSeconds(String time) {
+        if (time == null) {
+            return null;
+        }
+        try {
+            return Duration.parse(time).toSeconds();
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
     }
 }

@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +49,11 @@ public class QuizSessionServiceImpl implements QuizSessionService {
         String base64 = Base64.getEncoder().encodeToString(qrBytes);
 
         return new CreateSessionResponse(code, base64);
+    }
+
+    @Override
+    public Optional<QuizSession> findByCode(String code) {
+        return quizSessionRepository.findByCode(code);
     }
 
     private String participantJoinLink(String baseUrl, String code) {
