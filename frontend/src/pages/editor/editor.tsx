@@ -268,7 +268,6 @@ export const EditorPage: React.FC = () => {
             >
                 {slides.length > 0 && (
                     <div
-                        dangerouslySetInnerHTML={{__html: slides[currentSlide].outerHTML}}
                         style={{
                             width: '100%',
                             height: '100%',
@@ -276,7 +275,18 @@ export const EditorPage: React.FC = () => {
                             justifyContent: 'center',
                             alignItems: 'center'
                         }}
-                    />
+                    >
+                        {/* Используем iframe для безопасного отображения HTML */}
+                        <iframe
+                            srcDoc={slides[currentSlide].outerHTML}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                border: 'none'
+                            }}
+                            sandbox="allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin" // Ограничиваем возможности iframe для безопасности
+                        />
+                    </div>
                 )}
                 <div style={{
                     position: 'absolute',
@@ -373,7 +383,7 @@ export const EditorPage: React.FC = () => {
                             borderRadius: "45px",
                             boxShadow: "none"
                         }}
-                        onClick={handlePreview}>
+                                onClick={handlePreview}>
                             <Typography sx={{textTransform: "none", fontSize: "0.9rem"}}>
                                 Предпросмотр
                             </Typography>
