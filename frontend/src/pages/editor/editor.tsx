@@ -3,12 +3,19 @@ import {Box, Button, Divider, Typography, Snackbar, Alert, CircularProgress} fro
 import uploadUrl from "../../assets/UploadIcon.svg";
 import downloadUrl from "../../assets/DownloadIcon.svg";
 import BackgroundBox from "../../components/backgroundbox/backgroundbox.tsx";
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Editor} from "@monaco-editor/react";
 import axios from 'axios';
 import ScaledIframe from "../../components/scaled-iframe.tsx";
+import {useParams} from "react-router-dom";
+import {Prez} from "../../data/models/Prez.tsx";
+import {uploadPptx} from "../../apis/pptxParserApi.tsx";
 
 export const EditorPage: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+
+    const [prez, setPrez] = useState<Prez | null>(null);
+
     const [htmlCode, setHtmlCode] = useState<string>("<!DOCTYPE html>\n<html>\n<head>\n  <title>Пример</title>\n</head>\n<body>\n  <h1>Привет, мир!</h1>\n</body>\n</html>");
     const [error, setError] = useState<string | null>(null);
     const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -37,42 +44,11 @@ export const EditorPage: React.FC = () => {
         setError(null);
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const api = axios.create({
-                baseURL: 'http://localhost:8088/api/v1',
-                timeout: 300000,
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'accept': '*/*'
-                },
-            });
-
-            const response = await api.post('/parse/pptx', formData, {
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round(
-                        (progressEvent.loaded * 100) / (progressEvent.total || 1)
-                    );
-                    console.log(`Upload progress: ${percentCompleted}%`);
-                },
-            });
-
-            if (response.data) {
-                setHtmlCode(response.data);
-            }
+            setPrez(await uploadPptx(file));
         } catch (error) {
             let errorMessage = 'Произошла ошибка при загрузке файла';
 
-            if (axios.isAxiosError(error)) {
-                if (error.code === 'ECONNABORTED') {
-                    errorMessage = 'Превышено время ожидания ответа от сервера. Попробуйте уменьшить размер файла или повторить попытку позже.';
-                } else if (error.code === 'ERR_NETWORK') {
-                    errorMessage = 'Не удалось подключиться к серверу. Проверьте, запущен ли бекенд и доступен ли по указанному адресу.';
-                } else if (error.response) {
-                    errorMessage = `Ошибка сервера: ${error.response.status} - ${error.response.data?.message || 'Неизвестная ошибка'}`;
-                }
-            } else if (error instanceof Error) {
+            if (error instanceof Error) {
                 errorMessage = error.message;
             }
 
@@ -90,6 +66,23 @@ export const EditorPage: React.FC = () => {
     const handleCloseSnackbar = () => {
         setOpenSnackbar(false);
     };
+
+    const loadPrez = async () => {
+        try {
+            const prezResponse = await fetchPrezById(id!);
+            setPrez(prezResponse);
+            setIsLoading(false);
+        } catch {
+            setError("Ошибка при загрузке продукта");
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (id) {
+            loadPrez();
+        }
+    }, [id]);
 
     return (
         <BackgroundBox>
