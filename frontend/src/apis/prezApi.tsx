@@ -9,3 +9,28 @@ export const fetchPrezById = async (
     console.log(response.data);
     return response.data;
 }
+
+export const fetchPrezs = async () => {
+    const response = await axios.get(`${API_BASE_URL}/presentations`, {
+        params: {
+            ownerId: 0
+        }
+    });
+    console.log(response.data);
+    return response.data;
+}
+
+export const uploadPrez = async (
+    title: string,
+    html: string
+) => {
+    const response = await axios.post(`${API_BASE_URL}/presentations`, {
+        params: {
+            ownerId: 0,
+            title: title,
+            html: html
+        }
+    })
+    console.log(response.data);
+    return response.data;
+}

@@ -1,5 +1,7 @@
 export interface Prez {
-    id: string;
-    name: string;
-    htmlCode: string;
+    id: number;
+    ownerId: number;
+    title: string;
+    customHtml: string;
+    convertedHtml: string;
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
     Box,
     Card,
@@ -9,11 +9,93 @@ import {
     Divider,
     TextField,
     Button,
-    Typography
+    Typography,
+    CircularProgress
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
+import { Close as CloseIcon, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import {uploadPptx} from "../../apis/pptxParserApi.tsx";
+import {uploadPrez} from "../../apis/prezApi.tsx";
+import {useNavigate} from "react-router-dom";
 
-export const PresentationBox: React.FC = () => {
+const BASE_HTML_CODE = "<!DOCTYPE html>\n" +
+    "<html>\n" +
+    "<head>\n" +
+    "    <title>Hello, World!</title>\n" +
+    "</head>\n" +
+    "<body>\n" +
+    "    <h1>Hello, world!</h1>\n" +
+    "</body>\n" +
+    "</html>";
+
+interface PresentationBoxProps {
+    onClose: () => void;
+}
+
+export const PresentationBox: React.FC<PresentationBoxProps> = ({ onClose }) => {
+    const navigator = useNavigate();
+
+    const [file, setFile] = useState<File | null>(null);
+    const [title, setTitle] = useState<string>("Безымянная презентация");
+    const [dragActive, setDragActive] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [htmlCode, setHtmlCode] = useState<string>(BASE_HTML_CODE);
+
+    const handleDrag = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === 'dragenter' || e.type === 'dragover') {
+            setDragActive(true);
+        } else if (e.type === 'dragleave') {
+            setDragActive(false);
+        }
+    }, []);
+
+    const handleDrop = useCallback(async (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const droppedFile = e.dataTransfer.files[0];
+            if (droppedFile.name.endsWith('.pptx')) {
+                setFile(droppedFile);
+                await handleFileUpload(droppedFile);
+            } else {
+                alert('Пожалуйста, загрузите файл в формате .pptx');
+            }
+        }
+    }, []);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const selectedFile = e.target.files[0];
+            if (selectedFile.name.endsWith('.pptx')) {
+                setFile(selectedFile);
+                await handleFileUpload(selectedFile);
+            } else {
+                alert('Пожалуйста, загрузите файл в формате .pptx');
+            }
+        }
+    };
+
+    const handleFileUpload = async (fileToUpload: File) => {
+        try {
+            setUploading(true);
+            const htmlCodeResponse = await uploadPptx(fileToUpload);
+            setHtmlCode(htmlCodeResponse);
+        } catch (error) {
+            console.error("Ошибка при загрузке файла:", error);
+            alert("Произошла ошибка при загрузке файла");
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleCreate = async () => {
+        const {id, ownerId, _title, customHtml, convHtml} = await uploadPrez(title, htmlCode);
+        navigator(`/editor/${id}`);
+        onClose();
+    };
+
     return (
         <Box sx={{ width: 600, height: 636 }}>
             <Card
@@ -42,7 +124,7 @@ export const PresentationBox: React.FC = () => {
                             >
                                 Новая презентация
                             </Typography>
-                            <IconButton sx={{ width: 40, height: 40 }}>
+                            <IconButton sx={{ width: 40, height: 40 }} onClick={onClose}>
                                 <CloseIcon sx={{ width: 30, height: 30 }} />
                             </IconButton>
                         </Box>
@@ -60,67 +142,131 @@ export const PresentationBox: React.FC = () => {
                                 borderRadius: "10px",
                                 borderColor: "#2f3a4c",
                                 fontFamily: "'Inter-Regular', Helvetica",
-                                fontSize: "1.2rem" // ~24px
+                                fontSize: "1.2rem"
                             }
                         }}
+                        onChange={(e) => setTitle(e.target.value.trim())}
                     />
 
                     <Box
                         sx={{
                             width: "94%",
-                            height: 288, // 72 * 4 (since MUI uses 8px base)
-                            border: "1px dashed black",
+                            height: 288,
+                            border: `1px dashed ${dragActive ? '#098842' : 'black'}`,
+                            backgroundColor: dragActive ? 'rgba(9, 136, 66, 0.1)' : 'transparent',
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
-                            p: 2
+                            p: 2,
+                            position: 'relative'
                         }}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={handleDrop}
                     >
-                        <Typography
-                            sx={{
-                                fontFamily: "'Inter-Regular', Helvetica",
-                                fontWeight: 400,
-                                color: "#1b222c",
-                                fontSize: "1.2rem",
-                                textAlign: "center",
-                                mb: 5
-                            }}
-                        >
-                            Вы можете загрузить макет презентации в формате .pptx
-                        </Typography>
+                        {uploading ? (
+                            <>
+                                <CircularProgress size={60} sx={{ mb: 2 }} />
+                                <Typography
+                                    sx={{
+                                        fontFamily: "'Inter-Regular', Helvetica",
+                                        fontWeight: 400,
+                                        color: "#1b222c",
+                                        fontSize: "1.2rem",
+                                        textAlign: "center"
+                                    }}
+                                >
+                                    Загрузка файла...
+                                </Typography>
+                            </>
+                        ) : file ? (
+                            <>
+                                <CloudUploadIcon sx={{ fontSize: 60, color: "#098842", mb: 2 }} />
+                                <Typography
+                                    sx={{
+                                        fontFamily: "'Inter-Regular', Helvetica",
+                                        fontWeight: 400,
+                                        color: "#1b222c",
+                                        fontSize: "1.2rem",
+                                        textAlign: "center",
+                                        mb: 1
+                                    }}
+                                >
+                                    {file.name}
+                                </Typography>
+                                <Typography
+                                    sx={{
+                                        fontFamily: "'Inter-Regular', Helvetica",
+                                        fontWeight: 400,
+                                        color: "#098842",
+                                        fontSize: "1rem",
+                                        textAlign: "center"
+                                    }}
+                                >
+                                    {htmlCode == "" ? "Файл успешно загружен" : "Файл готов к загрузке"}
+                                </Typography>
+                            </>
+                        ) : (
+                            <>
+                                <CloudUploadIcon sx={{ fontSize: 60, color: "#2f3a4c", mb: 2 }} />
+                                <Typography
+                                    sx={{
+                                        fontFamily: "'Inter-Regular', Helvetica",
+                                        fontWeight: 400,
+                                        color: "#1b222c",
+                                        fontSize: "1.2rem",
+                                        textAlign: "center",
+                                        mb: 5
+                                    }}
+                                >
+                                    {dragActive ? 'Отпустите файл для загрузки' : 'Вы можете загрузить макет презентации в формате .pptx'}
+                                </Typography>
 
-                        <Button
-                            variant="contained"
-                            sx={{
-                                width: 179,
-                                height: 52,
-                                bgcolor: "#2f3a4c",
-                                borderRadius: "10px",
-                                fontFamily: "'Inter-SemiBold', Helvetica",
-                                fontWeight: 600,
-                                color: "white",
-                                fontSize: "1.2rem",
-                                mb: 3,
-                                "&:hover": {
-                                    bgcolor: "#2f3a4c"
-                                }
-                            }}
-                        >
-                            Загрузить
-                        </Button>
+                                <input
+                                    accept=".pptx"
+                                    style={{ display: 'none' }}
+                                    id="upload-button-file"
+                                    type="file"
+                                    onChange={handleFileChange}
+                                />
+                                <label htmlFor="upload-button-file">
+                                    <Button
+                                        variant="contained"
+                                        component="span"
+                                        sx={{
+                                            width: 179,
+                                            height: 52,
+                                            bgcolor: "#2f3a4c",
+                                            borderRadius: "10px",
+                                            fontFamily: "'Inter-SemiBold', Helvetica",
+                                            fontWeight: 600,
+                                            color: "white",
+                                            fontSize: "1.2rem",
+                                            mb: 3,
+                                            "&:hover": {
+                                                bgcolor: "#2f3a4c"
+                                            }
+                                        }}
+                                    >
+                                        Загрузить
+                                    </Button>
+                                </label>
 
-                        <Typography
-                            sx={{
-                                fontFamily: "'Inter-Regular', Helvetica",
-                                fontWeight: 400,
-                                color: "#1b222c80",
-                                fontSize: "1.2rem",
-                                textAlign: "center"
-                            }}
-                        >
-                            или перетащите файл сюда.
-                        </Typography>
+                                <Typography
+                                    sx={{
+                                        fontFamily: "'Inter-Regular', Helvetica",
+                                        fontWeight: 400,
+                                        color: "#1b222c80",
+                                        fontSize: "1.2rem",
+                                        textAlign: "center"
+                                    }}
+                                >
+                                    или перетащите файл сюда.
+                                </Typography>
+                            </>
+                        )}
                     </Box>
                 </CardContent>
 
@@ -146,6 +292,7 @@ export const PresentationBox: React.FC = () => {
                             fontSize: "1.2rem",
                             ml: 1
                         }}
+                        onClick={onClose}
                     >
                         Отмена
                     </Button>
@@ -166,8 +313,10 @@ export const PresentationBox: React.FC = () => {
                             },
                             mr: 3
                         }}
+                        onClick={handleCreate}
+                        disabled={uploading}
                     >
-                        Создать
+                        {uploading ? <CircularProgress size={24} color="inherit" /> : "Создать"}
                     </Button>
                 </CardActions>
             </Card>

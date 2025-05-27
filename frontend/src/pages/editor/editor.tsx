@@ -1,18 +1,18 @@
 import NavBar from "../../components/navbar/navbar.tsx";
-import {Box, Button, Divider, Typography, Snackbar, Alert, CircularProgress} from "@mui/material";
+import {Alert, Box, Button, CircularProgress, Divider, Snackbar, Typography} from "@mui/material";
 import uploadUrl from "../../assets/UploadIcon.svg";
 import downloadUrl from "../../assets/DownloadIcon.svg";
 import BackgroundBox from "../../components/backgroundbox/backgroundbox.tsx";
 import React, {useEffect, useRef, useState} from "react";
 import {Editor} from "@monaco-editor/react";
-import axios from 'axios';
 import ScaledIframe from "../../components/scaled-iframe.tsx";
 import {useParams} from "react-router-dom";
 import {Prez} from "../../data/models/Prez.tsx";
 import {uploadPptx} from "../../apis/pptxParserApi.tsx";
+import {fetchPrezById} from "../../apis/prezApi.tsx";
 
 export const EditorPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
 
     const [prez, setPrez] = useState<Prez | null>(null);
 
@@ -83,6 +83,31 @@ export const EditorPage: React.FC = () => {
             loadPrez();
         }
     }, [id]);
+
+    if (!prez) {
+        return (
+            <BackgroundBox>
+                <NavBar needSearchLine={false} needButtonToSlides={true}></NavBar>
+                <Box sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginY: "20%",
+                    marginX: "25%",
+                    width: "800px",
+                    minHeight: "100px",
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid rgba(27, 44, 44, 1)",
+                    borderRadius: "5px"
+                }}>
+                    <Typography
+                        sx={{display: "flex", justifyContent: "center", alignItems: "center", fontSize: "2rem"}}>
+                        Презентации с данным id не существует
+                    </Typography>
+                </Box>
+            </BackgroundBox>
+        )
+    }
 
     return (
         <BackgroundBox>
