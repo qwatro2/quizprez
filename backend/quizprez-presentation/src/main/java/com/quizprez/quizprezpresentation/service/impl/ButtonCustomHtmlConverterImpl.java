@@ -1,8 +1,8 @@
-package com.quizprez.quizprezpresentation.service;
+package com.quizprez.quizprezpresentation.service.impl;
 
 import com.quizprez.quizprezpresentation.config.FrontendConfig;
 import com.quizprez.quizprezpresentation.config.QuizServiceConfig;
-import com.quizprez.quizprezpresentation.service.impl.ButtonMode;
+import com.quizprez.quizprezpresentation.service.CustomHtmlConverter;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
