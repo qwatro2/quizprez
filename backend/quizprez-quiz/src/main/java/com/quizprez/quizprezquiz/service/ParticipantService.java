@@ -9,5 +9,7 @@ public interface ParticipantService {
 
     Participant createParticipant(QuizSession quizSession, String participantName);
 
+    Participant findParticipant(QuizSession quizSession, String participantName);
+
     ParticipantJoinResponse constructResponse(Participant participant);
 }

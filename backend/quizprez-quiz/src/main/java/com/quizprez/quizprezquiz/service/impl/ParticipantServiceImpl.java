@@ -29,6 +29,11 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
+    public Participant findParticipant(QuizSession quizSession, String participantName) {
+        return participantRepository.findParticipantByQuizSessionAndName(quizSession, participantName);
+    }
+
+    @Override
     public ParticipantJoinResponse constructResponse(Participant participant) {
         return ParticipantJoinResponse.builder()
                 .sessionCode(participant.getQuizSession().getCode())
