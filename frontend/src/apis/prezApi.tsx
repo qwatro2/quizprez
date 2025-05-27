@@ -28,7 +28,22 @@ export const uploadPrez = async (
         ownerId: 0,
         title: title,
         html: html
-    })
+    });
+    console.log(response.data);
+    return response.data;
+}
+
+export const updatePrez = async (
+    id: number,
+    ownerId: number,
+    title: string,
+    html: string
+) => {
+    const response = await axios.put(`${API_BASE_URL}/presentations/${id}`, {
+        ownerId: ownerId,
+        title: title,
+        html: html
+    });
     console.log(response.data);
     return response.data;
 }

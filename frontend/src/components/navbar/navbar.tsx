@@ -10,10 +10,37 @@ interface NavbarProps {
     needButtonToSlides: boolean;
     needSearchLine: boolean;
     slidesTitle?: string;
+    onTitleChange?: (newTitle: string) => void;
 }
 
-const NavBar: React.FC<NavbarProps> = ({needButtonToSlides, needSearchLine, slidesTitle}) => {
+const NavBar: React.FC<NavbarProps> = ({needButtonToSlides, needSearchLine, slidesTitle, onTitleChange}) => {
     const [searchText, setSearchText] = useState("");
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editedTitle, setEditedTitle] = useState(slidesTitle || "");
+
+    const handleTitleClick = () => {
+        if (slidesTitle !== undefined) {
+            setIsEditingTitle(true);
+            setEditedTitle(slidesTitle);
+        }
+    };
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditedTitle(e.target.value);
+    };
+
+    const handleTitleBlur = () => {
+        setIsEditingTitle(false);
+        if (onTitleChange && editedTitle !== slidesTitle) {
+            onTitleChange(editedTitle);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleTitleBlur();
+        }
+    };
 
     return (
         <AppBar position="fixed" className={styles['navbar']}>
@@ -80,13 +107,50 @@ const NavBar: React.FC<NavbarProps> = ({needButtonToSlides, needSearchLine, slid
                             display: "flex",
                             flexDirection: "row",
                             gap: "10px",
-                        }}>
-                            <Typography sx={{fontSize:"1.5rem"}}>{slidesTitle}</Typography>
-                            <Box
-                                component="img"
-                                src={changeUrl}
-                                sx={{width: 11 , height: 11, paddingTop: 2}}
-                            />
+                            alignItems: "center",
+                            cursor: "pointer",
+                            backgroundColor: isEditingTitle ? "#FFFFFF" : "transparent",
+                            borderRadius: "10px",
+                            padding: isEditingTitle ? "8px 16px" : "0",
+                            transition: "all 0.2s ease"
+                        }} onClick={handleTitleClick}>
+                            {isEditingTitle ? (
+                                <TextField
+                                    value={editedTitle}
+                                    onChange={handleTitleChange}
+                                    onBlur={handleTitleBlur}
+                                    onKeyDown={handleKeyDown}
+                                    autoFocus
+                                    variant="standard"
+                                    InputProps={{
+                                        disableUnderline: true,
+                                        style: {
+                                            fontSize: "1.5rem",
+                                            color: "#000000" // Черный цвет текста
+                                        }
+                                    }}
+                                    sx={{
+                                        '& .MuiInput-input': {
+                                            padding: 0,
+                                            color: "#000000" // Дублируем черный цвет
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    <Typography sx={{
+                                        fontSize: "1.5rem",
+                                        color: "#FFFFFF" // Черный цвет текста
+                                    }}>
+                                        {slidesTitle}
+                                    </Typography>
+                                    <Box
+                                        component="img"
+                                        src={changeUrl}
+                                        sx={{width: 11, height: 11}}
+                                    />
+                                </>
+                            )}
                         </Box>
                     </ListItem>
                 )}

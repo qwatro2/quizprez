@@ -9,13 +9,15 @@ import ScaledIframe from "../../components/scaled-iframe.tsx";
 import {useParams} from "react-router-dom";
 import {Prez} from "../../data/models/Prez.tsx";
 import {uploadPptx} from "../../apis/pptxParserApi.tsx";
-import {fetchPrezById} from "../../apis/prezApi.tsx";
+import {fetchPrezById, updatePrez} from "../../apis/prezApi.tsx";
 
 export const EditorPage: React.FC = () => {
     const {id} = useParams<{ id: string }>();
 
     const [prez, setPrez] = useState<Prez | null>(null);
     const [htmlCode, setHtmlCode] = useState<string>("");
+    const [convertedHtmlCode, setConvertedHtmlCode] = useState<string>("");
+    const [title, setTitle] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +26,6 @@ export const EditorPage: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const fullscreenRef = useRef<HTMLDivElement>(null);
 
-    // Получаем все слайды из HTML
     const getSlides = () => {
         if (!htmlCode) return [];
         const parser = new DOMParser();
@@ -34,7 +35,6 @@ export const EditorPage: React.FC = () => {
 
     const slides = getSlides();
 
-    // Обработчик нажатия клавиш в полноэкранном режиме
     useEffect(() => {
         if (!isFullscreen) return;
 
@@ -82,13 +82,53 @@ export const EditorPage: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'index.html';
+        a.download = `${title}.html`;
         a.click();
         URL.revokeObjectURL(url);
     };
 
     const handleUploadClick = () => {
         fileInputRef.current?.click();
+    };
+
+    const handleChangeTitle = async (newTitle: string) => {
+        setTitle(newTitle);
+
+        if (prez) {
+            try {
+                const updatedPrez = await updatePrez(
+                    prez.id,
+                    prez.ownerId,
+                    newTitle,
+                    htmlCode
+                );
+                setPrez(updatedPrez);
+                setConvertedHtmlCode(updatedPrez.convertedHtml);
+            } catch (error) {
+                console.error("Ошибка при обновлении заголовка:", error);
+                setError("Не удалось обновить заголовок");
+                setOpenSnackbar(true);
+            }
+        }
+    };
+
+    const handlePreview = async () => {
+        if (!prez) return;
+
+        try {
+            const updatedPrez = await updatePrez(
+                prez.id,
+                prez.ownerId,
+                title,
+                htmlCode
+            );
+            setPrez(updatedPrez);
+            setConvertedHtmlCode(updatedPrez.convertedHtml);
+        } catch (error) {
+            console.error("Ошибка при обновлении предпросмотра:", error);
+            setError("Не удалось обновить предпросмотр");
+            setOpenSnackbar(true);
+        }
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +141,23 @@ export const EditorPage: React.FC = () => {
         try {
             const response = await uploadPptx(file);
             setHtmlCode(response);
+
+            const updatedPrez = {
+                ...prez!,
+                title: title,
+                customHtml: response,
+                convertedHtml: response
+            };
+
+            const serverResponse = await updatePrez(
+                updatedPrez.id,
+                updatedPrez.ownerId,
+                updatedPrez.title,
+                updatedPrez.customHtml
+            );
+
+            setPrez(serverResponse);
+            setConvertedHtmlCode(serverResponse.convertedHtml);
         } catch (error) {
             let errorMessage = 'Произошла ошибка при загрузке файла';
             if (error instanceof Error) {
@@ -127,6 +184,8 @@ export const EditorPage: React.FC = () => {
             const prezResponse = await fetchPrezById(id!);
             setPrez(prezResponse);
             setHtmlCode(prezResponse.customHtml);
+            setConvertedHtmlCode(prezResponse.convertedHtml);
+            setTitle(prezResponse.title);
         } catch {
             setError("Ошибка при загрузке продукта");
         } finally {
@@ -186,7 +245,7 @@ export const EditorPage: React.FC = () => {
             >
                 {slides.length > 0 && (
                     <div
-                        dangerouslySetInnerHTML={{ __html: slides[currentSlide].outerHTML }}
+                        dangerouslySetInnerHTML={{__html: slides[currentSlide].outerHTML}}
                         style={{
                             width: '100%',
                             height: '100%',
@@ -232,7 +291,8 @@ export const EditorPage: React.FC = () => {
 
     return (
         <BackgroundBox>
-            <NavBar needSearchLine={false} needButtonToSlides={true} slidesTitle={prez.title}/>
+            <NavBar needSearchLine={false} needButtonToSlides={true} slidesTitle={title}
+                    onTitleChange={handleChangeTitle}/>
 
             <Box sx={{
                 display: "flex",
@@ -289,7 +349,8 @@ export const EditorPage: React.FC = () => {
                             backgroundColor: "#098842",
                             borderRadius: "45px",
                             boxShadow: "none"
-                        }}>
+                        }}
+                        onClick={handlePreview}>
                             <Typography sx={{textTransform: "none", fontSize: "0.9rem"}}>
                                 Предпросмотр
                             </Typography>
@@ -364,7 +425,7 @@ export const EditorPage: React.FC = () => {
                         backgroundColor: 'white',
                         overflow: 'hidden',
                     }}>
-                        <ScaledIframe src={htmlCode}></ScaledIframe>
+                        <ScaledIframe src={convertedHtmlCode}></ScaledIframe>
                     </Box>
                 </Box>
             </Box>

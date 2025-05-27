@@ -1,18 +1,18 @@
-import React, { useState, useCallback } from "react";
+import React, {useCallback, useState} from "react";
 import {
     Box,
-    Card,
-    CardHeader,
-    CardContent,
-    CardActions,
-    IconButton,
-    Divider,
-    TextField,
     Button,
-    Typography,
-    CircularProgress
+    Card,
+    CardActions,
+    CardContent,
+    CardHeader,
+    CircularProgress,
+    Divider,
+    IconButton,
+    TextField,
+    Typography
 } from "@mui/material";
-import { Close as CloseIcon, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import {Close as CloseIcon, CloudUpload as CloudUploadIcon} from "@mui/icons-material";
 import {uploadPptx} from "../../apis/pptxParserApi.tsx";
 import {uploadPrez} from "../../apis/prezApi.tsx";
 import {useNavigate} from "react-router-dom";
@@ -91,10 +91,11 @@ export const PresentationBox: React.FC<PresentationBoxProps> = ({ onClose }) => 
     };
 
     const handleCreate = async () => {
-        const {id, ownerId, _title, customHtml, convHtml} = await uploadPrez(title, htmlCode);
+        const {id} = await uploadPrez(title, htmlCode);
         navigator(`/editor/${id}`);
         onClose();
     };
+
 
     return (
         <Box sx={{ width: 600, height: 636 }}>
