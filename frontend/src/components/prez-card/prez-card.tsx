@@ -30,10 +30,10 @@ const SlidePreview = styled("div")({
 interface PrezCardProps {
     title: string;
     htmlContent: string;
-    onCardClicK: (id: number) => void;
+    onCardClick: (id: number) => void;
 }
 
-export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent, onCardClicK }) => {
+export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent, onCardClick }) => {
     const previewRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(1);
 
@@ -108,7 +108,7 @@ export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent, onCardCl
     };
 
     return (
-        <StyledCard onClick={onCardClicK}>
+        <StyledCard onClick={onCardClick}>
             <SlidePreview ref={previewRef} />
             <CardContent sx={{ px: 4, pt: 1.5 }}>
                 <Typography

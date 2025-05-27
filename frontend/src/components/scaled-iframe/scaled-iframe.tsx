@@ -45,7 +45,7 @@ const ScaledIframe: React.FC<ScaledIframeProps> = ({src, width = '100%', height 
 
     return (
         <div ref={containerRef}
-             style={{width, height, overflowY: 'hidden', overflowX: 'hidden', border: '1px solid #ccc', msOverflowStyle:"none", scrollbarWidth:"none"}}>
+             style={{width, height, overflowY: 'hidden', overflowX: 'hidden', border: '1px solid #ccc', msOverflowStyle:"none", scrollbarWidth:"none", marginLeft: "10px"}}>
             <iframe ref={iframeRef} srcDoc={src} style={{display: 'block', border: 'none'}} title="Scaled Iframe"/>
         </div>
     );

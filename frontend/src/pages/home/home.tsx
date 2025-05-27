@@ -97,7 +97,7 @@ export const HomePage: React.FC = () => {
                                     <PrezCard
                                         title={prez.title}
                                         htmlContent={prez.convertedHtml}
-                                        onCardClicK={() => {navigator(`/editor/${prez.id}`)}}
+                                        onCardClick={() => {navigator(`/editor/${prez.id}`)}}
                                     />
                                 </Grid>
                             ))}

@@ -54,6 +54,7 @@ export const EditorPage: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isFullscreen, currentSlide, slides.length]);
 
+
     const handleNavigateToHome = async () => {
         if (!prez) {
             navigator('/');
@@ -282,9 +283,13 @@ export const EditorPage: React.FC = () => {
                             style={{
                                 width: '100%',
                                 height: '100%',
-                                border: 'none'
+                                border: 'none',
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "40px",
+                                marginTop: "30px"
                             }}
-                            sandbox="allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin" // Ограничиваем возможности iframe для безопасности
+                            sandbox="allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin allow-popups" // Ограничиваем возможности iframe для безопасности
                         />
                     </div>
                 )}
