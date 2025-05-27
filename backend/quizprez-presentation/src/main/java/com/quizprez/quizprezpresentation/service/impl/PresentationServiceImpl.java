@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,12 +22,12 @@ public class PresentationServiceImpl implements PresentationService {
     private final CustomHtmlConverter customHtmlConverter;
 
     @Override
-    public PresentationResponse create(PresentationRequest req) {
+    public PresentationResponse create(PresentationRequest req, Map<String, Object> options) {
         Presentation p = Presentation.builder()
                 .ownerId(req.getOwnerId())
                 .title(req.getTitle())
                 .customHtml(req.getHtml())
-                .convertedHtml(customHtmlConverter.convert(req.getHtml()))
+                .convertedHtml(customHtmlConverter.convert(req.getHtml(), options))
                 .build();
         p = repo.save(p);
         return toDto(p);
@@ -55,12 +56,12 @@ public class PresentationServiceImpl implements PresentationService {
     }
 
     @Override
-    public PresentationResponse update(Long id, PresentationRequest req) {
+    public PresentationResponse update(Long id, PresentationRequest req, Map<String, Object> options) {
         Presentation p = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Presentation", "id", id));
         p.setTitle(req.getTitle());
         p.setCustomHtml(req.getHtml());
-        p.setConvertedHtml(customHtmlConverter.convert(req.getHtml()));
+        p.setConvertedHtml(customHtmlConverter.convert(req.getHtml(), options));
         p.setOwnerId(req.getOwnerId());
         p = repo.save(p);
         return toDto(p);
