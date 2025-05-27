@@ -46,13 +46,12 @@ public class ButtonCustomHtmlConverterImpl implements CustomHtmlConverter {
                     .attr("id", btnId)
                     .attr("type", "button")
                     .addClass("quiz-button")
-                    .attr("data-quiz-html", escapedQuizHtml)
                     .text("Start Quiz");
             if (!enabled) {
                 button.attr("disabled", "disabled");
             }
 
-            String script = buildScript(btnId);
+            String script = buildScript(btnId, escapedQuizHtml);
 
             quizEl.replaceWith(button);
             button.after(script);
@@ -69,42 +68,7 @@ public class ButtonCustomHtmlConverterImpl implements CustomHtmlConverter {
                 .replace("\n", "\\n");
     }
 
-    private String buildScript(String btnId) {
-        return "<script>\n" +
-                "(function() {\n" +
-                "  var btn = document.getElementById('" + btnId + "');\n" +
-                "  if (!btn) return;\n" +
-                "  btn.addEventListener('click', function(e) {\n" +
-                "    e.preventDefault();\n" +
-                "    btn.disabled = true;\n" +
-                "    var quizHtml = btn.getAttribute('data-quiz-html');\n" +
-                "    fetch('" + quizServiceConfig.baseUrl() + "/admin/create', {\n" +
-                "      method: 'POST',\n" +
-                "      headers: { 'Content-Type': 'application/json' },\n" +
-                "      body: JSON.stringify({ html: quizHtml })\n" +
-                "    })\n" +
-                "    .then(function(res) { if (!res.ok) throw new Error(res.statusText); return res.json(); })\n" +
-                "    .then(function(data) {\n" +
-                "      var url = '"+ frontendConfig.baseUrl() +"/quiz/creds?code=' +\n" +
-                "                encodeURIComponent(data.code) +\n" +
-                "                '&base64=' + encodeURIComponent(data.base64);\n" +
-                "      var a = document.createElement('a');\n" +
-                "      a.href = url;\n" +
-                "      a.style.display = btn.style.display;\n" +
-                "      btn.parentNode.replaceChild(a, btn);\n" +
-                "      a.appendChild(btn);\n" +
-                "      a.click();\n" +
-                "    })\n" +
-                "    .catch(function(err) {\n" +
-                "      console.error('Quiz start error:', err);\n" +
-                "      btn.disabled = false;\n" +
-                "    });\n" +
-                "  });\n" +
-                "})();\n" +
-                "</script>";
-    }
-
-    private String buildScriptDEPRECETED(String btnId, String escapedQuizHtml) {
+    private String buildScript(String btnId, String escapedQuizHtml) {
         return "<script>\n" +
                 "document.addEventListener('DOMContentLoaded', function() {\n" +
                 "  var btn = document.getElementById('" + btnId + "');\n" +
