@@ -26,6 +26,6 @@ public class QuizSession {
     @JoinColumn(name = "quiz_id")
     private QuizModel quiz;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "quizSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants;
 }
