@@ -9,6 +9,7 @@ import com.quizprez.quizprezpresentation.service.CustomHtmlConverter;
 import com.quizprez.quizprezpresentation.service.PresentationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ public class PresentationServiceImpl implements PresentationService {
     }
 
     @Override
+    @Transactional
     public List<PresentationResponse> getByOwner(Long ownerId) {
         return repo.findByOwnerId(ownerId).stream()
                 .map(this::toDto)
