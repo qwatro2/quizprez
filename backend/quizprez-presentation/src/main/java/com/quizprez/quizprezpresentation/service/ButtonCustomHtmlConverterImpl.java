@@ -85,7 +85,11 @@ public class ButtonCustomHtmlConverterImpl implements CustomHtmlConverter {
                 "      params.append('code', data.code);\n" +
                 "      params.append('base64', data.base64);\n" +
                 "      var url = '" + frontendConfig.baseUrl() + "/quiz/creds?' + params.toString();\n" +
-                "      window.location.href = url;\n" +
+                "      if (window.top !== window.self) {\n" +
+                "        window.top.location.href = url;\n" +
+                "      } else {\n" +
+                "        window.location.href = url;\n" +
+                "      }\n" +
                 "    })\n" +
                 "    .catch(function(err) {\n" +
                 "      console.error(err);\n" +
