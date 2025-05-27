@@ -15,12 +15,67 @@ export const EditorPage: React.FC = () => {
     const {id} = useParams<{ id: string }>();
 
     const [prez, setPrez] = useState<Prez | null>(null);
-
-    const [htmlCode, setHtmlCode] = useState<string>("<!DOCTYPE html>\n<html>\n<head>\n  <title>Пример</title>\n</head>\n<body>\n  <h1>Привет, мир!</h1>\n</body>\n</html>");
+    const [htmlCode, setHtmlCode] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [currentSlide, setCurrentSlide] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const fullscreenRef = useRef<HTMLDivElement>(null);
+
+    // Получаем все слайды из HTML
+    const getSlides = () => {
+        if (!htmlCode) return [];
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlCode, 'text/html');
+        return Array.from(doc.querySelectorAll('div[id^="page"]'));
+    };
+
+    const slides = getSlides();
+
+    // Обработчик нажатия клавиш в полноэкранном режиме
+    useEffect(() => {
+        if (!isFullscreen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                handleExitFullscreen();
+            } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                handleNextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                handlePrevSlide();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isFullscreen, currentSlide, slides.length]);
+
+    const handleNextSlide = () => {
+        setCurrentSlide(prev => Math.min(prev + 1, slides.length - 1));
+    };
+
+    const handlePrevSlide = () => {
+        setCurrentSlide(prev => Math.max(prev - 1, 0));
+    };
+
+    const handleStartPresentation = () => {
+        setIsFullscreen(true);
+        setCurrentSlide(0);
+        document.documentElement.requestFullscreen().catch(e => {
+            console.error('Error attempting to enable fullscreen:', e);
+        });
+    };
+
+    const handleExitFullscreen = () => {
+        setIsFullscreen(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(e => {
+                console.error('Error attempting to exit fullscreen:', e);
+            });
+        }
+    };
 
     const handleDownload = () => {
         const blob = new Blob([htmlCode], {type: 'text/html'});
@@ -44,14 +99,13 @@ export const EditorPage: React.FC = () => {
         setError(null);
 
         try {
-            setPrez(await uploadPptx(file));
+            const response = await uploadPptx(file);
+            setHtmlCode(response);
         } catch (error) {
             let errorMessage = 'Произошла ошибка при загрузке файла';
-
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
-
             console.error('Error uploading file:', error);
             setError(errorMessage);
             setOpenSnackbar(true);
@@ -68,12 +122,14 @@ export const EditorPage: React.FC = () => {
     };
 
     const loadPrez = async () => {
+        setIsLoading(true);
         try {
             const prezResponse = await fetchPrezById(id!);
             setPrez(prezResponse);
-            setIsLoading(false);
+            setHtmlCode(prezResponse.customHtml);
         } catch {
             setError("Ошибка при загрузке продукта");
+        } finally {
             setIsLoading(false);
         }
     };
@@ -109,9 +165,74 @@ export const EditorPage: React.FC = () => {
         )
     }
 
+    // Fullscreen presentation view
+    if (isFullscreen) {
+        return (
+            <div
+                ref={fullscreenRef}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'white',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9999
+                }}
+                onClick={() => handleNextSlide()}
+            >
+                {slides.length > 0 && (
+                    <div
+                        dangerouslySetInnerHTML={{ __html: slides[currentSlide].outerHTML }}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    />
+                )}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    color: 'white',
+                    padding: '10px',
+                    borderRadius: '5px'
+                }}>
+                    {currentSlide + 1} / {slides.length}
+                </div>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleExitFullscreen();
+                    }}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px',
+                        borderRadius: '5px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Выход (Esc)
+                </button>
+            </div>
+        );
+    }
+
     return (
         <BackgroundBox>
-            <NavBar needSearchLine={false} needButtonToSlides={true} slidesTitle={"БЧХ-коды"}/>
+            <NavBar needSearchLine={false} needButtonToSlides={true} slidesTitle={prez.title}/>
 
             <Box sx={{
                 display: "flex",
@@ -173,11 +294,15 @@ export const EditorPage: React.FC = () => {
                                 Предпросмотр
                             </Typography>
                         </Button>
-                        <Button variant="contained" sx={{
-                            backgroundColor: "#098842",
-                            borderRadius: "45px",
-                            boxShadow: "none"
-                        }}>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                backgroundColor: "#098842",
+                                borderRadius: "45px",
+                                boxShadow: "none"
+                            }}
+                            onClick={handleStartPresentation}
+                        >
                             <Typography sx={{textTransform: "none", fontSize: "0.9rem"}}>
                                 Демонстрация
                             </Typography>
