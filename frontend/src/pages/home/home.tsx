@@ -6,8 +6,11 @@ import {Prez} from "../../data/models/Prez.tsx";
 import {fetchPrezs} from "../../apis/prezApi.tsx";
 import PresentationBox from "../../components/new-prez-modal/new-prez-modal.tsx";
 import PrezCard from "../../components/prez-card/prez-card.tsx";
+import {useNavigate} from "react-router-dom";
 
 export const HomePage: React.FC = () => {
+    const navigator = useNavigate();
+
     const [prezs, setPrezs] = useState<Prez[]>([]);
     const [openModal, setOpenModal] = useState(false);
 
@@ -52,29 +55,30 @@ export const HomePage: React.FC = () => {
                     alignItems: "center",
                     marginTop: "70px",
                     marginBottom: "20px",
+                    marginX: "10px",
                     justifyContent: "space-between" // Равномерное распределение элементов
                 }}>
                     <Typography sx={{fontSize: "1.2rem"}}>
                         Недавние презентации
                     </Typography>
-                    <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
-                        <Button
-                            variant="contained"
-                            onClick={handleOpenModal}
-                            sx={{
-                                backgroundColor: "#098842",
-                                borderRadius: "45px",
-                                boxShadow: "none",
-                                height: "56px",
-                                minWidth: "250px"
-                            }}
-                        >
-                            <Typography sx={{textTransform: "none"}}>
-                                Создать новую презентацию
-                            </Typography>
-                        </Button>
-                        <Box component="img" src={sortUrl} sx={{width: "40px", height: "auto", cursor: "pointer"}}/>
-                    </Box>
+                    <Button
+                        variant="contained"
+                        onClick={handleOpenModal}
+                        sx={{
+                            backgroundColor: "#098842",
+                            borderRadius: "45px",
+                            boxShadow: "none",
+                            height: "56px",
+                            minWidth: "250px",
+                            marginRight: "13%"
+                        }}
+                    >
+                        <Typography sx={{textTransform: "none"}}>
+                            Создать новую презентацию
+                        </Typography>
+                    </Button>
+                    <Box component="img" src={sortUrl} sx={{width: "40px", height: "auto", cursor: "pointer"}}/>
+
                 </Box>
 
                 <Box sx={{
@@ -89,10 +93,11 @@ export const HomePage: React.FC = () => {
                     {prezs.length !== 0 ? (
                         <Grid container spacing={4}>
                             {prezs.map((prez: Prez) => (
-                                <Grid item size={{xs:12, sm:6, md:4}} key={prez.id}>
+                                <Grid item size={{xs: 12, sm: 6, md: 4}} key={prez.id}>
                                     <PrezCard
                                         title={prez.title}
                                         htmlContent={prez.convertedHtml}
+                                        onCardClicK={() => {navigator(`/editor/${prez.id}`)}}
                                     />
                                 </Grid>
                             ))}
@@ -126,7 +131,7 @@ export const HomePage: React.FC = () => {
                 }}
                 onClick={handleOpenModal}
             >
-                <Typography sx={{fontSize:"3rem"}}>+</Typography>
+                <Typography sx={{fontSize: "3rem"}}>+</Typography>
             </Fab>
 
             <Modal

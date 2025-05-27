@@ -3,8 +3,8 @@ import { styled } from "@mui/material/styles";
 import React, { useRef, useEffect, useState } from "react";
 
 const StyledCard = styled(Card)({
-    width: 380,
-    height: 250,
+    width: 430,
+    height: 300,
     overflow: "hidden",
     borderRadius: 10,
     border: "1px solid rgba(27, 44, 43, 0.5)",
@@ -18,7 +18,7 @@ const StyledCard = styled(Card)({
 
 const SlidePreview = styled("div")({
     width: "100%",
-    height: 200,
+    height: 240,
     overflow: "hidden",
     position: "relative",
     display: "flex",
@@ -30,9 +30,10 @@ const SlidePreview = styled("div")({
 interface PrezCardProps {
     title: string;
     htmlContent: string;
+    onCardClicK: (id: number) => void;
 }
 
-export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent }) => {
+export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent, onCardClicK }) => {
     const previewRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(1);
 
@@ -86,8 +87,8 @@ export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent }) => {
         const contentHeight = contentRect.height;
 
         // Размеры области предпросмотра
-        const previewWidth = 380;
-        const previewHeight = 250;
+        const previewWidth = 430;
+        const previewHeight = 400;
 
         // Вычисляем масштаб для ширины и высоты
         const widthScale = previewWidth / contentWidth;
@@ -107,7 +108,7 @@ export const PrezCard: React.FC<PrezCardProps> = ({ title, htmlContent }) => {
     };
 
     return (
-        <StyledCard>
+        <StyledCard onClick={onCardClicK}>
             <SlidePreview ref={previewRef} />
             <CardContent sx={{ px: 4, pt: 1.5 }}>
                 <Typography
