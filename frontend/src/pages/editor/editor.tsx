@@ -29,9 +29,9 @@ export const EditorPage: React.FC = () => {
     const fullscreenRef = useRef<HTMLDivElement>(null);
 
     const getSlides = () => {
-        if (!htmlCode) return [];
+        if (!convertedHtmlCode) return [];
         const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlCode, 'text/html');
+        const doc = parser.parseFromString(convertedHtmlCode, 'text/html');
         return Array.from(doc.querySelectorAll('div[id^="page"]'));
     };
 
