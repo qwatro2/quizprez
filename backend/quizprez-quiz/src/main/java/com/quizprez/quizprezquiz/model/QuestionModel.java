@@ -9,23 +9,26 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Entity
-@Table(name = "quiz_sessions")
+@Table(name = "question_models")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuizSession {
+public class QuestionModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String code;
+    private String text;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "quiz_id")
-    private QuizModel quiz;
+    private Long timeSeconds;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Participant> participants;
+    private String styles;
+
+    @OneToMany(mappedBy = "questionModel", cascade = CascadeType.ALL)
+    private List<OptionModel> optionModels;
+
+    @ManyToOne
+    @JoinColumn(name = "quiz_model_id")
+    private QuizModel quizModel;
 }

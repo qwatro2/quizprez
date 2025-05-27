@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ParticipantAnswerRepository extends JpaRepository<ParticipantAnswer, Long> {
-    List<ParticipantAnswer> findBySessionId(Long sessionId);
+    List<ParticipantAnswer> findByQuizSessionId(Long sessionId);
 }

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
-    Optional<Participant> findBySessionAndName(QuizSession session, String name);
+    Optional<Participant> findByQuizSessionAndName(QuizSession session, String name);
 
-    List<Participant> findBySession(QuizSession session);
+    List<Participant> findByQuizSession(QuizSession session);
 }

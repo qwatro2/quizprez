@@ -1,7 +1,7 @@
 package com.quizprez.quizprezquiz.service;
 
-import com.quizprez.quizprezquiz.model.Quiz;
+import com.quizprez.quizprezquiz.entity.QuizEntity;
 
 public interface QuizParser {
-    Quiz parse(String html);
+    QuizEntity parse(String html);
 }

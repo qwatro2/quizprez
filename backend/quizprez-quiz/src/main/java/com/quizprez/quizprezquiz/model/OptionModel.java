@@ -7,21 +7,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "participants",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"quiz_session_id", "name"}))
+@Table(name = "option_models")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Participant {
+public class OptionModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "quiz_session_id")
-    private QuizSession quizSession;
+    private String text;
 
-    @Column(nullable = false)
-    private String name;
+    private Boolean isCorrect;
+
+    private String styles;
+
+    @ManyToOne
+    @JoinColumn(name = "question_model_id")
+    private QuestionModel questionModel;
 }

@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @Entity
 @Table(name = "participant_answers")
 @Data
@@ -20,8 +18,8 @@ public class ParticipantAnswer {
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "session_id")
-    private QuizSession session;
+    @JoinColumn(name = "quiz_session_id")
+    private QuizSession quizSession;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "participant_id")
@@ -29,9 +27,7 @@ public class ParticipantAnswer {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "question_id")
-    private Question question;
+    private QuestionModel question;
 
-    private String answer;
     private boolean correct;
-    private Instant submittedAt;
 }
