@@ -84,7 +84,7 @@ public class ButtonCustomHtmlConverterImpl implements CustomHtmlConverter {
                 "      var params = new URLSearchParams();\n" +
                 "      params.append('code', data.code);\n" +
                 "      params.append('base64', data.base64);\n" +
-                "      window.location.href = '"+ frontendConfig.baseUrl() +"/quiz/creds?' + params.toString();\n" +
+                "      window.location.replace('"+ frontendConfig.baseUrl() +"/quiz/creds?' + params.toString());\n" +
                 "    })\n" +
                 "    .catch(function(err) {\n" +
                 "      console.error(err);\n" +
