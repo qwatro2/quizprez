@@ -11,9 +11,18 @@ interface NavbarProps {
     needSearchLine: boolean;
     slidesTitle?: string;
     onTitleChange?: (newTitle: string) => void;
+    onNavigateToHome?: () => void;
 }
 
-const NavBar: React.FC<NavbarProps> = ({needButtonToSlides, needSearchLine, slidesTitle, onTitleChange}) => {
+const NavBar: React.FC<NavbarProps> = ({
+                                           needButtonToSlides,
+                                           needSearchLine,
+                                           slidesTitle,
+                                           onTitleChange,
+                                           onNavigateToHome
+                                       }) => {
+
+
     const [searchText, setSearchText] = useState("");
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(slidesTitle || "");
@@ -48,8 +57,10 @@ const NavBar: React.FC<NavbarProps> = ({needButtonToSlides, needSearchLine, slid
                 <ListItem className={styles['navbar-item']} sx={{
                     padding: '0 16px',
                     height: '100%',
-                    marginRight: 'auto'
-                }}>
+                    marginRight: 'auto',
+                    cursor: "pointer"
+                }}
+                onClick={onNavigateToHome}>
                     <Box
                         component="img"
                         src={titleUrl}
@@ -156,7 +167,7 @@ const NavBar: React.FC<NavbarProps> = ({needButtonToSlides, needSearchLine, slid
                 )}
 
                 {needButtonToSlides && (
-                    <ListItem className={styles['navbar-item']}>
+                    <ListItem className={styles['navbar-item']} onClick={onNavigateToHome}>
                         <Button
                             variant="outlined"
                             className={styles['navbar-button']}

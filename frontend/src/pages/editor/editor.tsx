@@ -5,13 +5,15 @@ import downloadUrl from "../../assets/DownloadIcon.svg";
 import BackgroundBox from "../../components/backgroundbox/backgroundbox.tsx";
 import React, {useEffect, useRef, useState} from "react";
 import {Editor} from "@monaco-editor/react";
-import ScaledIframe from "../../components/scaled-iframe.tsx";
-import {useParams} from "react-router-dom";
+import ScaledIframe from "../../components/scaled-iframe/scaled-iframe.tsx";
+import {useNavigate, useParams} from "react-router-dom";
 import {Prez} from "../../data/models/Prez.tsx";
 import {uploadPptx} from "../../apis/pptxParserApi.tsx";
 import {fetchPrezById, updatePrez} from "../../apis/prezApi.tsx";
 
 export const EditorPage: React.FC = () => {
+    const navigator = useNavigate();
+
     const {id} = useParams<{ id: string }>();
 
     const [prez, setPrez] = useState<Prez | null>(null);
@@ -51,6 +53,27 @@ export const EditorPage: React.FC = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isFullscreen, currentSlide, slides.length]);
+
+    const handleNavigateToHome = async () => {
+        if (!prez) {
+            navigator('/');
+            return;
+        }
+
+        try {
+            await updatePrez(
+                prez.id,
+                prez.ownerId,
+                title,
+                htmlCode
+            );
+            navigator('/');
+        } catch (error) {
+            console.error("Ошибка при сохранении перед переходом:", error);
+            setError("Не удалось сохранить изменения перед переходом");
+            setOpenSnackbar(true);
+        }
+    };
 
     const handleNextSlide = () => {
         setCurrentSlide(prev => Math.min(prev + 1, slides.length - 1));
@@ -202,7 +225,7 @@ export const EditorPage: React.FC = () => {
     if (!prez) {
         return (
             <BackgroundBox>
-                <NavBar needSearchLine={false} needButtonToSlides={true}></NavBar>
+                <NavBar needSearchLine={false} needButtonToSlides={true} onNavigateToHome={handleNavigateToHome}></NavBar>
                 <Box sx={{
                     display: "flex",
                     justifyContent: "center",
@@ -292,7 +315,7 @@ export const EditorPage: React.FC = () => {
     return (
         <BackgroundBox>
             <NavBar needSearchLine={false} needButtonToSlides={true} slidesTitle={title}
-                    onTitleChange={handleChangeTitle}/>
+                    onTitleChange={handleChangeTitle} onNavigateToHome={handleNavigateToHome}/>
 
             <Box sx={{
                 display: "flex",

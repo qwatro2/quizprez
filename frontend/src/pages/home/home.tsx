@@ -5,6 +5,7 @@ import sortUrl from "../../assets/SortIcon.svg";
 import {Prez} from "../../data/models/Prez.tsx";
 import {fetchPrezs} from "../../apis/prezApi.tsx";
 import PresentationBox from "../../components/new-prez-modal/new-prez-modal.tsx";
+import PrezCard from "../../components/prez-card/prez-card.tsx";
 
 export const HomePage: React.FC = () => {
     const [prezs, setPrezs] = useState<Prez[]>([]);
@@ -72,15 +73,13 @@ export const HomePage: React.FC = () => {
                     flexGrow: 1, // Занимает все оставшееся пространство
                 }}>
                     {prezs.length !== 0 ? (
-                        <Box>
-                            {prezs.map((prez: Prez, index: number) => (
-                                <Box sx={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-                                    gap: "20px",
-                                }}>
-
-                                </Box>
+                        <Box sx={{
+                            display: "grid",
+                            justifyContent: "center",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))"
+                        }}>
+                            {prezs.map((prez: Prez) => (
+                                <PrezCard key={prez.id} title={prez.title} htmlContent={prez.convertedHtml}></PrezCard>
                             ))}
                         </Box>
                     ) : (
@@ -103,7 +102,7 @@ export const HomePage: React.FC = () => {
                     }
                 }}
             >
-                <Typography sx={{fontSize:"3rem"}} onClick={handleOpenModal}>+</Typography>
+                <Typography sx={{fontSize: "3rem"}} onClick={handleOpenModal}>+</Typography>
             </Fab>
             <Modal
                 open={openModal}
