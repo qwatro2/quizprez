@@ -5,6 +5,7 @@ import com.quizprez.quizprezpresentation.dto.PresentationResponse;
 import com.quizprez.quizprezpresentation.exception.ResourceNotFoundException;
 import com.quizprez.quizprezpresentation.model.Presentation;
 import com.quizprez.quizprezpresentation.repository.PresentationRepository;
+import com.quizprez.quizprezpresentation.service.CustomHtmlConverter;
 import com.quizprez.quizprezpresentation.service.PresentationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,14 +17,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PresentationServiceImpl implements PresentationService {
     private final PresentationRepository repo;
+    private final CustomHtmlConverter customHtmlConverter;
 
     @Override
     public PresentationResponse create(PresentationRequest req) {
         Presentation p = Presentation.builder()
                 .ownerId(req.getOwnerId())
                 .title(req.getTitle())
-                .customHtml(req.getCustomHtml())
-                .convertedHtml(req.getConvertedHtml())
+                .customHtml(req.getHtml())
+                .convertedHtml(customHtmlConverter.convert(req.getHtml()))
                 .build();
         p = repo.save(p);
         return toDto(p);
@@ -55,8 +57,8 @@ public class PresentationServiceImpl implements PresentationService {
         Presentation p = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Presentation", "id", id));
         p.setTitle(req.getTitle());
-        p.setCustomHtml(req.getCustomHtml());
-        p.setConvertedHtml(req.getConvertedHtml());
+        p.setCustomHtml(req.getHtml());
+        p.setConvertedHtml(customHtmlConverter.convert(req.getHtml()));
         p.setOwnerId(req.getOwnerId());
         p = repo.save(p);
         return toDto(p);
